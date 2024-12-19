@@ -493,6 +493,11 @@ body {
   line-height: 1;         /* 设置行高为1 */
 }
 
+.add-btn.quantity {
+  background: #4caf50; /* 绿色背景表示已加入购物车 */
+  font-weight: bold;
+}
+
 /* 如果使用的是加号字符 */
 .add-btn span {
   display: flex;

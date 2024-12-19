@@ -128,6 +128,7 @@
                               <div class="price-text">
                                   <span class="currency">RM</span><span class="price">{{ $product->unit_price }}</span>
                               </div>
+                              
                               <button class="add-btn" data-product-id="{{ $product->product_id }}" data-product="{{ json_encode($product) }}"><span>+</span></button>
                             </div>
                           </div>
@@ -146,15 +147,22 @@
             <p>No categories found.</p>
         @endif
       </div> <!-- menu-content -->
-
+      
       <div class="cart-button">
-        <div style="display: flex; align-items: center;">
+        <div id="view-cart-btn" style="display: flex; align-items: center;">
           View Cart
           <div class="cart-count">0</div>
         </div>
         <div class="cart-total">RM 0.00</div>
       </div> <!-- cart-button -->
     
+      <!-- <div class="cart-button">
+        <button id="view-cart-btn" style="display: flex; align-items: center;">
+            View Cart
+            <div class="cart-count">0</div>
+        </button>
+        <div class="cart-total">RM 0.00</div>
+    </div> -->
 
     <!-- pop up modal -->
     <div class="food-modal" id="foodModal" style="display:none;">
@@ -197,7 +205,7 @@
     </div> 
     <!-- pop up modal -->
 
-    <!-- searcj not found modal -->
+    <!-- search not found modal -->
     <div class="custom-modal" id="noMatchModal" style="display: none;">
         <div class="custom-modal-content">
             <div class="custom-modal-body">
@@ -207,64 +215,9 @@
             </div>
         </div>
     </div>
+  </div>
 
-    <!-- cart modal -->
-    <div class="cart-modal" id="cartModal">
-      <div class="modal-content">
-        <div class="cart-header">
-          <button class="back-btn">
-            <i class="fas fa-chevron-left"></i>
-          </button>
-          <h2>My Cart</h2>
-        </div>
-        
-        <div class="restaurant-name">The Toast 土司坊</div>
-        
-        <div class="order-info">
-          <span><i class="far fa-clock"></i> Pre-Order</span>
-          <span><i class="fas fa-user"></i> 2 pax</span>
-          <i class="fas fa-chevron-right"></i>
-        </div>
-
-        <div class="cart-items">
-          <div class="cart-item">
-            <img src="/images/fishnchip.png" alt="Crispy Fish & Chips">
-            <div class="item-details">
-              <h3>Crispy Fish & Chips</h3>
-              <p class="item-remark">Tata sauce</p>
-              <div class="item-price">RM 19.80</div>
-            </div>
-            <div class="quantity-controls">
-              <button class="quantity-btn minus">-</button>
-              <span class="quantity">1</span>
-              <button class="quantity-btn plus">+</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="cart-summary">
-          <div class="summary-row">
-            <span>Subtotal</span>
-            <span>RM 97.40</span>
-          </div>
-          <div class="summary-row">
-            <span>SST (6%)</span>
-            <span>RM 5.84</span>
-          </div>
-          <div class="summary-row">
-            <span>Rounding</span>
-            <span>RM 0.01</span>
-          </div>
-          <div class="summary-row total">
-            <span>Total <small>(incl. fees and tax)</small></span>
-            <span>RM 103.25</span>
-          </div>
-        </div>
-
-        <button class="confirm-order-btn">Confirm Order</button>
-      </div>
-    </div>
-    <!-- cart modal -->
+    
 
 
 
@@ -355,8 +308,8 @@
         let basePrice = 0;
 
         // 打开模态框
-        $('.add-btn').click(function(e) {
-            e.preventDefault();
+        $('.add-btn, .product-item').click(function(e) {
+          e.preventDefault();
             
             // 获取当前点击的菜品数据
             const product = $(this).data('product');
@@ -444,180 +397,196 @@
             });
             totalPrice *= quantity;
             $('.add-cart-btn').text(`Add to cart - RM ${totalPrice.toFixed(2)}`);
+            $('#quantity').text(quantity);
         }
       });
+      //pop up modal end
 
       //add to cart
-      // 获取元素
-const foodModal = document.getElementById('foodModal');
-const closeModalButton = document.querySelector('.close-modal');
-const addCartButton = document.querySelector('.add-cart-btn');
-const cartCount = document.querySelector('.cart-count');
-const cartTotal = document.querySelector('.cart-total');
-const quantityElement = document.getElementById('quantity');
-const productPriceElement = document.getElementById('modal-product-price');
+      $(document).ready(function() {
+        let cart = {
+            items: {},
+            totalQuantity: 0,
+            totalPrice: 0.00
+        };
 
-// 从 localStorage 初始化购物车数据
-let cart = JSON.parse(localStorage.getItem('cart')) || {
-  totalQuantity: 0,
-  totalPrice: 0
-};
+        // 更新购物车显示
+        function updateCartDisplay() {
+            $('.cart-count').text(cart.totalQuantity);
+            $('.cart-total').text('RM ' + cart.totalPrice.toFixed(2));
+        }
 
-// 初始化时更新购物车显示
-updateCart();
+        // 更新产品数量显示
+        function updateProductQuantityDisplay(productId) {
+          const quantity = cart.items[productId] ? cart.items[productId].quantity : 0;
+          const button = $(`.add-btn[data-product-id="${productId}"]`);
 
-// 打开modal时的初始化
-function openModal(product) {
-  // 重置数量为1
-  quantityElement.textContent = '1';
-  
-  // 重置变体选项
-  document.querySelectorAll('#modal-variant-options input[type="checkbox"], #modal-variant-options input[type="radio"]')
-    .forEach(input => {
-      input.checked = false;
-    });
-    
-  // 设置初始价格为产品单价
-  const basePrice = product.unit_price;
-  productPriceElement.textContent = `RM ${basePrice.toFixed(2)}`;
-  addCartButton.textContent = `Add to cart - RM ${basePrice.toFixed(2)}`;
-  
-  // 显示modal
-  foodModal.style.display = 'block';
-}
+          if (quantity > 0) {
+            button.text(quantity).addClass('quantity'); // 显示数量并添加类
+          } else {
+            button.text('+').removeClass('quantity'); // 显示加号并移除类
+          }
+        }
 
-// 关闭modal
-function closeModal() {
-  foodModal.style.display = 'none';
-}
+        // 计算总价，包括变体
+        function calculateTotalPrice(basePrice, quantity) {
+            let totalPrice = basePrice;
+            $('#modal-variant-options .form-check-input:checked').each(function() {
+                totalPrice += parseFloat($(this).data('price'));
+            });
+            return totalPrice * quantity;
+        }
 
-// 更新modal中的价格显示
-function updateModalPrice() {
-  const basePrice = parseFloat(productPriceElement.textContent.replace('RM ', '').trim());
-  let totalPrice = basePrice;
-  
-  // 计算变体选项的附加费用
-  document.querySelectorAll('#modal-variant-options .form-check-input:checked').forEach(option => {
-    totalPrice += parseFloat(option.dataset.price);
-  });
-  
-  const quantity = parseInt(quantityElement.textContent);
-  totalPrice *= quantity;
-  
-  // 更新"Add to cart"按钮的价格显示
-  addCartButton.textContent = `Add to cart - RM ${totalPrice.toFixed(2)}`;
-}
+        // 打开模态框时设置产品ID
+        $('.add-btn').click(function() {
+            const product = $(this).data('product');
+            $('#modal-product-title').data('product-id', product.product_id);
+            updateProductQuantityDisplay(product.product_id); // 更新产品数量显示
+        });
 
-// 更新购物车
-function updateCart() {
-  cartCount.textContent = cart.totalQuantity;
-  cartTotal.textContent = `RM ${cart.totalPrice.toFixed(2)}`;
-  localStorage.setItem('cart', JSON.stringify(cart));
-}
+        // 添加到购物车按钮事件
+        $('.add-cart-btn').click(function() {
+            const productId = $('#modal-product-title').data('product-id');
+            const productName = $('#modal-product-title').text();
+            const basePrice = parseFloat($('#modal-product-price').text().replace('RM ', ''));
+            const quantity = parseInt($('#quantity').text());
+            const totalPrice = calculateTotalPrice(basePrice, quantity);
 
-// 添加到购物车
-addCartButton.addEventListener('click', () => {
-  const quantity = parseInt(quantityElement.textContent);
-  let basePrice = parseFloat(productPriceElement.textContent.replace('RM ', '').trim());
-  let totalPrice = basePrice;
+            // 更新购物车数据
+            if (!cart.items[productId]) {
+                cart.items[productId] = { name: productName, quantity: 0, totalPrice: 0, unitPrice: basePrice };
+            }
 
-  // 计算变体选项的附加费用
-  document.querySelectorAll('#modal-variant-options .form-check-input:checked').forEach(option => {
-    totalPrice += parseFloat(option.dataset.price);
-  });
+            cart.items[productId].quantity += quantity;
+            cart.items[productId].totalPrice += totalPrice;
 
-  totalPrice *= quantity;
+            // 更新总数量和总价格
+            cart.totalQuantity = Object.values(cart.items).reduce((sum, item) => sum + item.quantity, 0);
+            cart.totalPrice = Object.values(cart.items).reduce((sum, item) => sum + item.totalPrice, 0);
 
-  if (isNaN(totalPrice)) {
-    alert('Invalid product price');
-    return;
-  }
+            // 更新显示
+            updateCartDisplay();
+            updateProductQuantityDisplay(productId);
 
-  // 更新购物车
-  cart.totalQuantity += quantity;
-  cart.totalPrice += totalPrice;
-  
-  // 更新购物车显示
-  updateCart();
-  
-  // 关闭modal
-  closeModal();
+            // 关闭模态框
+            $('#foodModal').fadeOut(200).removeClass('show');
+        });
+
+        // 初始化购物车显示
+        updateCartDisplay();
+      });
+      //add to cart end
+
+
+
+      document.querySelector('#view-cart-btn').addEventListener('click', function () {
+    // 发送请求到后端，获取购物车数据
+    fetch('/order/cart', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        },
+    })
+        .then(response => response.json())
+        .then(cart => {
+            // 更新 My Cart 弹窗中的内容
+            const cartContainer = document.querySelector('.my-cart-items');
+            cartContainer.innerHTML = ''; // 清空旧内容
+
+            if (Object.keys(cart).length === 0) {
+                cartContainer.innerHTML = '<p>Your cart is empty.</p>';
+            } else {
+                for (const productId in cart) {
+                    const item = cart[productId];
+                    cartContainer.innerHTML += `
+                        <div class="cart-item">
+                            <img src="${item.product_img}" alt="${item.product_name}">
+                            <div class="item-details">
+                                <h5>${item.product_name}</h5>
+                                <p class="item-remark">${item.remark || ''}</p>
+                                <div class="item-price">RM ${item.unit_price}</div>
+                            </div>
+                            <div class="quantity-controls">
+                                <button class="quantity-btn minus" data-id="${productId}">-</button>
+                                <span class="quantity">${item.quantity}</span>
+                                <button class="quantity-btn plus" data-id="${productId}">+</button>
+                            </div>
+                        </div>`;
+                }
+            }
+
+            // 显示 My Cart 弹窗
+            document.querySelector('#myCartModal').style.display = 'block';
+        });
 });
 
-// 在产品卡片上添加点击事件监听器
-document.querySelectorAll('.add-btn').forEach(button => {
-  button.addEventListener('click', function(e) {
-    e.preventDefault();
-    const product = JSON.parse(this.dataset.product);
-    openModal(product);
-  });
-});
+document.addEventListener('click', function (e) {
+    if (e.target.classList.contains('quantity-btn')) {
+        const isPlus = e.target.classList.contains('plus');
+        const productId = e.target.dataset.id;
+        const quantityElement = e.target.closest('.quantity-controls').querySelector('.quantity');
+        let newQuantity = parseInt(quantityElement.textContent);
 
-// 数量控制
-document.querySelector('.quantity-btn.minus').addEventListener('click', () => {
-  let quantity = parseInt(quantityElement.textContent);
-  if (quantity > 1) {
-    quantity--;
-    quantityElement.textContent = quantity;
-    updateModalPrice();
-  }
-});
+        newQuantity = isPlus ? newQuantity + 1 : newQuantity - 1;
+        if (newQuantity < 1) return;
 
-document.querySelector('.quantity-btn.plus').addEventListener('click', () => {
-  let quantity = parseInt(quantityElement.textContent);
-  quantity++;
-  quantityElement.textContent = quantity;
-  updateModalPrice();
-});
-
-// 监听变体选项变化
-document.querySelector('#modal-variant-options').addEventListener('change', () => {
-  updateModalPrice();
-});
-
-// 初始化产品数量追踪对象
-let productQuantities = JSON.parse(localStorage.getItem('productQuantities')) || {};
-
-// 更新产品卡片上的数量显示
-function updateProductCardQuantity(productId, quantity) {
-  const addButton = document.querySelector(`.add-btn[data-product-id="${productId}"]`);
-  if (addButton) {
-    if (quantity > 0) {
-      addButton.innerHTML = `<span>${quantity}</span>`;
-      addButton.classList.add('added'); // 添加类以改变样式
-    } else {
-      addButton.innerHTML = '<span>+</span>';
-      addButton.classList.remove('added');
+        fetch('/order/cart/update', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            },
+            body: JSON.stringify({ product_id: productId, quantity: newQuantity }),
+        })
+            .then(response => response.json())
+            .then(() => {
+                quantityElement.textContent = newQuantity;
+            });
     }
-  }
-}
-
-// 添加到购物车时更新数量显示
-addCartButton.addEventListener('click', () => {
-  const quantity = parseInt(quantityElement.textContent);
-  const productId = addCartButton.getAttribute('data-product-id');
-  
-  // 更新产品数量
-  if (!productQuantities[productId]) {
-    productQuantities[productId] = 0;
-  }
-  productQuantities[productId] += quantity;
-  
-  // 保存到 localStorage
-  localStorage.setItem('productQuantities', JSON.stringify(productQuantities));
-  
-  // 更新UI显示
-  updateProductCardQuantity(productId, productQuantities[productId]);
-  
-  // ... 其他购物车更新逻辑 ...
 });
 
-// 页面加载时初始化所有产品的数量显示
-document.addEventListener('DOMContentLoaded', () => {
-  for (const productId in productQuantities) {
-    updateProductCardQuantity(productId, productQuantities[productId]);
-  }
+document.addEventListener('click', function (e) {
+    if (e.target.classList.contains('remove-btn')) {
+        const productId = e.target.dataset.id;
+
+        fetch('/order/cart/remove', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            },
+            body: JSON.stringify({ product_id: productId }),
+        })
+            .then(response => response.json())
+            .then(() => {
+                e.target.closest('.cart-item').remove();
+            });
+    }
 });
+
+document.addEventListener('click', function (e) {
+    if (e.target.classList.contains('add-btn')) {
+        const productId = e.target.dataset.productId;
+        const productData = JSON.parse(e.target.dataset.product);
+
+        fetch('/order/cart/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            },
+            body: JSON.stringify({ product_id: productId, product: productData }),
+        })
+            .then(response => response.json())
+            .then(data => {
+                alert('Product added to cart!');
+                // 可更新页面上的购物车数量显示
+                document.querySelector('.cart-count').textContent = data.cart_count;
+            });
+    }
+});
+
 
     </script>
 

@@ -121,4 +121,9 @@ Route::post('/products/search', [ProductController::class, 'search'])->name('pro
 
 
 //cart
-Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
+
+Route::post('/order/cart/add', [CartController::class, 'addToCart']);
+Route::post('/order/cart/update', [CartController::class, 'updateCart']);
+Route::post('/order/cart/remove', [CartController::class, 'removeFromCart']);
+Route::get('/order/cart', [CartController::class, 'getCart']); // 用于获取当前购物车数据
+

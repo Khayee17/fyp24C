@@ -1,4 +1,6 @@
-<div class="my-cart-modal" id="myCartModal">
+
+
+<div class="my-cart-modal" id="myCartModal" style="display: none;">
 
     <div class="my-cart-content">
 
@@ -9,7 +11,7 @@
         <h2>My Cart</h2>
         </div>
 
-        <div class="restaurant-name">MEO WESTERN CAFE</div>
+        <div class="restaurant-name">The Toast 土司坊</div>
 
         <div class="order-info">
         <span><i class="far fa-clock"></i> Pre-Order</span>
@@ -18,101 +20,9 @@
         </div>
 
         <div class="my-cart-items">
-            <div class="cart-item">
-                <img src="/images/fishnchip.png" alt="Crispy Fish & Chips">
-
-                <div class="item-details">
-                    <h5>Crispy Fish & Chips</h5>
-                    <p class="item-remark">Tata sauce</p>
-                    <div class="item-price">RM 19.80</div>
-                    </div>
-
-                    <div class="quantity-controls">
-                    <button class="quantity-btn minus">-</button>
-                    <span class="quantity">1</span>
-                    <button class="quantity-btn plus">+</button>
-                </div>
-            </div>
-
-            <div class="cart-item">
-                <img src="/images/fishnchip.png" alt="Grilled Salmon">
-
-                <div class="item-details">
-                    <h5>Grilled Salmon with Black Pepper Sauce</h5>
-                    <p class="item-remark">More french fries pls</p>
-                    <div class="item-price">RM 38.80</div>
-                    </div>
-
-                    <div class="quantity-controls">
-                    <button class="quantity-btn minus">-</button>
-                    <span class="quantity">2</span>
-                    <button class="quantity-btn plus">+</button>
-                </div>
-            </div>
-            <div class="cart-item">
-                <img src="/images/fishnchip.png" alt="Crispy Fish & Chips">
-
-                <div class="item-details">
-                    <h5>Crispy Fish & Chips</h5>
-                    <p class="item-remark">Tata sauce</p>
-                    <div class="item-price">RM 19.80</div>
-                    </div>
-
-                    <div class="quantity-controls">
-                    <button class="quantity-btn minus">-</button>
-                    <span class="quantity">1</span>
-                    <button class="quantity-btn plus">+</button>
-                </div>
-            </div>
-
-            <div class="cart-item">
-                <img src="/images/fishnchip.png" alt="Grilled Salmon">
-
-                <div class="item-details">
-                    <h5>Grilled Salmon with Black Pepper Sauce</h5>
-                    <p class="item-remark">More french fries pls</p>
-                    <div class="item-price">RM 38.80</div>
-                    </div>
-
-                    <div class="quantity-controls">
-                    <button class="quantity-btn minus">-</button>
-                    <span class="quantity">2</span>
-                    <button class="quantity-btn plus">+</button>
-                </div>
-            </div>
-
-            <div class="cart-item">
-                <img src="/images/fishnchip.png" alt="Grilled Salmon">
-
-                <div class="item-details">
-                    <h5>Grilled Salmon with Black Pepper Sauce</h5>
-                    <p class="item-remark">More french fries pls</p>
-                    <div class="item-price">RM 38.80</div>
-                    </div>
-
-                    <div class="quantity-controls">
-                    <button class="quantity-btn minus">-</button>
-                    <span class="quantity">2</span>
-                    <button class="quantity-btn plus">+</button>
-                </div>
-            </div>
-            <div class="cart-item">
-                <img src="/images/fishnchip.png" alt="Grilled Salmon">
-
-                <div class="item-details">
-                    <h5>Grilled Salmon with Black Pepper Sauce</h5>
-                    <p class="item-remark">More french fries pls</p>
-                    <div class="item-price">RM 38.80</div>
-                    </div>
-
-                    <div class="quantity-controls">
-                    <button class="quantity-btn minus">-</button>
-                    <span class="quantity">2</span>
-                    <button class="quantity-btn plus">+</button>
-                </div>
-            </div>
-
+            
         </div>
+
 
         <button class="add-more-btn">Add More</button>
         
@@ -143,3 +53,4 @@
 
     <button class="my-cart-confirm-btn">Confirm Order</button>
 </div>
+
