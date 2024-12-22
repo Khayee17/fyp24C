@@ -1,6 +1,4 @@
-
-
-<div class="my-cart-modal" id="myCartModal" style="display: none;">
+<div class="my-cart-modal" id="myCartModal">
 
     <div class="my-cart-content">
 
@@ -23,28 +21,27 @@
             
         </div>
 
-
         <button class="add-more-btn">Add More</button>
         
         <div class="my-cart-summary">
             <div class="summary-row">
                 <span>Subtotal</span>
-                <span>RM 97.40</span>
+                <span>RM 0.00</span>
             </div>
 
             <div class="summary-row">
                 <span>SST (6%)</span>
-                <span>RM 5.84</span>
+                <span>RM 0.00</span>
             </div>
 
             <div class="summary-row">
                 <span>Rounding</span>
-                <span>RM 0.01</span>
+                <span>RM 0.00</span>
             </div>
 
             <div class="summary-row my-cart-total">
                 <span>Total <small>(incl. fees and tax)</small></span>
-                <span>RM 103.25</span>
+                <span>RM 0.00</span>
             </div>
 
             </div>
@@ -53,4 +50,3 @@
 
     <button class="my-cart-confirm-btn">Confirm Order</button>
 </div>
-

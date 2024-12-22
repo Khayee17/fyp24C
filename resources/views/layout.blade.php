@@ -156,13 +156,6 @@
         <div class="cart-total">RM 0.00</div>
       </div> <!-- cart-button -->
     
-      <!-- <div class="cart-button">
-        <button id="view-cart-btn" style="display: flex; align-items: center;">
-            View Cart
-            <div class="cart-count">0</div>
-        </button>
-        <div class="cart-total">RM 0.00</div>
-    </div> -->
 
     <!-- pop up modal -->
     <div class="food-modal" id="foodModal" style="display:none;">
@@ -329,32 +322,33 @@
 
             // 动态生成变体选项
             if (product.variants && product.variants.length > 0) {
-                product.variants.forEach(function (variant) {
-                    const label = variant.is_required ? '<span class="text-danger">【required】</span>' : '<span class="text-secondary">【optional】</span>';
-                    const variantTitle = $(`<h5 class="variant-title"></h5>`).html(`${variant.variantName} ${label}`);
-                    const variantContainer = $('<div class="variant-option mb-3"></div>').append(variantTitle);
+              product.variants.forEach(function (variant) {
+                  const label = variant.is_required ? '<span class="text-danger">【required】</span>' : '<span class="text-secondary">【optional】</span>';
+                  const variantTitle = $(`<h5 class="variant-title"></h5>`).html(`${variant.variantName} ${label}`);
+                  const variantContainer = $('<div class="variant-option mb-3"></div>').append(variantTitle);
 
-                    const optionsContainer = $('<div class="variant-options-container"></div>');
-                    const optionPrices = variant.variantPrice ? variant.variantPrice.split(',') : [];
+                  const optionsContainer = $('<div class="variant-options-container"></div>');
+                  const optionPrices = variant.variantPrice ? variant.variantPrice.split(',') : [];
 
-                    variant.variantOpt.split(',').forEach(function (option, index) {
-                        const optionPrice = parseFloat(optionPrices[index] || '0.00');
-                        const inputType = variant.is_required ? 'radio' : 'checkbox';
-                        const inputName = `variant-${variant.variantName.replace(/\s+/g, '-')}`;
+                  variant.variantOpt.split(',').forEach(function (option, index) {
+                      const optionPrice = parseFloat(optionPrices[index] || '0.00');
+                      const inputType = variant.is_required ? 'radio' : 'checkbox';
+                      const inputName = `variant-${variant.variantName.replace(/\s+/g, '-')}`;
 
-                        const optionElement = $('<div class="form-check"></div>');
-                        optionElement.append(
-                            `<input class="form-check-input" type="${inputType}" name="${inputName}" value="${option}" data-price="${optionPrice}" ${variant.is_required ? 'required' : ''}>
-                            <label class="form-check-label">${option} + RM ${optionPrice.toFixed(2)}</label>`
-                        );
+                      const optionElement = $('<div class="form-check"></div>');
+                      optionElement.append(
+                          `<input class="form-check-input" type="${inputType}" name="${inputName}" value="${option}" 
+                          data-price="${optionPrice}" data-name="${option}" ${variant.is_required ? 'required' : ''}>
+                          <label class="form-check-label">${option} + RM ${optionPrice.toFixed(2)}</label>`
+                      );
 
-                        optionsContainer.append(optionElement);
-                    });
+                      optionsContainer.append(optionElement);
+                  });
 
-                    variantContainer.append(optionsContainer);
-                    $('#modal-variant-options').append(variantContainer);
-                });
-            }
+                  variantContainer.append(optionsContainer);
+                  $('#modal-variant-options').append(variantContainer);
+              });
+          }
 
             // 显示模态框
             $('#foodModal').fadeIn(200).addClass('show');
@@ -404,29 +398,34 @@
 
       //add to cart
       $(document).ready(function() {
-        let cart = {
-            items: {},
-            totalQuantity: 0,
-            totalPrice: 0.00
+        let cart = JSON.parse(localStorage.getItem('cart')) || {
+          items: {},
+          totalQuantity: 0,
+          totalPrice: 0.00
         };
 
         // 更新购物车显示
-        function updateCartDisplay() {
-            $('.cart-count').text(cart.totalQuantity);
-            $('.cart-total').text('RM ' + cart.totalPrice.toFixed(2));
+        function updateCartDisplay() { 
+          cart.totalPrice = cart.totalPrice || 0;
+          $('.cart-count').text(cart.totalQuantity); $('.cart-total').text('RM ' + cart.totalPrice.toFixed(2));
+
         }
 
-        // 更新产品数量显示
-        function updateProductQuantityDisplay(productId) {
-          const quantity = cart.items[productId] ? cart.items[productId].quantity : 0;
-          const button = $(`.add-btn[data-product-id="${productId}"]`);
+        // 更新产品数量显示，包括变体
+        function updateProductQuantityDisplay(productId, variantName = null) {
+          const fullProductId = variantName ? `${productId}-${variantName}` : productId;
+          const quantity = cart.items[fullProductId] ? cart.items[fullProductId].quantity : 0;
+          const button = $(`.add-btn[data-product-id="${fullProductId}"]`);
 
-          if (quantity > 0) {
-            button.text(quantity).addClass('quantity'); // 显示数量并添加类
-          } else {
-            button.text('+').removeClass('quantity'); // 显示加号并移除类
-          }
+          button.each(function() { 
+            if (quantity > 0) { 
+              $(this).text(quantity).addClass('quantity'); // 显示数量并添加类 
+              } else { 
+                $(this).text('+').removeClass('quantity'); // 显示加号并移除类 }
+              }
+          });
         }
+
 
         // 计算总价，包括变体
         function calculateTotalPrice(basePrice, quantity) {
@@ -437,156 +436,176 @@
             return totalPrice * quantity;
         }
 
-        // 打开模态框时设置产品ID
-        $('.add-btn').click(function() {
-            const product = $(this).data('product');
-            $('#modal-product-title').data('product-id', product.product_id);
-            updateProductQuantityDisplay(product.product_id); // 更新产品数量显示
-        });
+        // 更新购物车模态框内容
+        function updateCartModal() {
+            const cartItemsContainer = $('.my-cart-items');
+            cartItemsContainer.empty(); // 清空旧内容
 
-        // 添加到购物车按钮事件
+            for (const productId in cart.items) {
+                const item = cart.items[productId];
+                const variantText = item.variants && item.variants.length > 0 
+                    ? item.variants.join(', ') // 用逗号分隔多个变体
+                    : 'No variant selected'; // 如果没有变体，显示 'No variant selected'
+                const cartItemHTML = `
+                    <div class="cart-item">
+                        <img src="/images/${productId}.png" alt="${item.name}">
+                        <div class="item-details">
+                            <h5>${item.name}</h5>
+                            <p class="item-remark">${variantText}</p> 
+                            <div class="item-price">RM ${(item.unitPrice + item.variantPrice).toFixed(2)}</div>
+                        </div>
+                        <div class="quantity-controls">
+                            <button class="quantity-btn minus" data-product-id="${productId}">-</button>
+                            <span class="quantity">${item.quantity}</span>
+                            <button class="quantity-btn plus" data-product-id="${productId}">+</button>
+                        </div>
+                    </div>
+                `;
+                cartItemsContainer.append(cartItemHTML);
+            }
+
+            updateCartSummary();
+        }
+
+
+        // 更新购物车总计
+        function updateCartSummary() {
+            const subtotal = cart.totalPrice;
+            const sst = subtotal * 0.06; // 6%的SST
+            const rounding = Math.round((subtotal + sst) * 100) / 100 - (subtotal + sst);
+            const total = subtotal + sst + rounding;
+
+            $('.my-cart-summary .summary-row:nth-child(1) span:nth-child(2)').text(`RM ${subtotal.toFixed(2)}`);
+            $('.my-cart-summary .summary-row:nth-child(2) span:nth-child(2)').text(`RM ${sst.toFixed(2)}`);
+            $('.my-cart-summary .summary-row:nth-child(3) span:nth-child(2)').text(`RM ${rounding.toFixed(2)}`);
+            $('.my-cart-summary .my-cart-total span:nth-child(2)').text(`RM ${total.toFixed(2)}`);
+        }
+
+        updateCartDisplay();
+        updateCartModal();
+
+        for (const fullProductId in cart.items) {
+          const [productId, variantName] = fullProductId.split('-');
+          if (variantName) {
+              updateProductQuantityDisplay(productId, variantName); // 针对变体更新
+          }
+        }
+
+
+        // 添加到购物车事件
         $('.add-cart-btn').click(function() {
             const productId = $('#modal-product-title').data('product-id');
             const productName = $('#modal-product-title').text();
             const basePrice = parseFloat($('#modal-product-price').text().replace('RM ', ''));
             const quantity = parseInt($('#quantity').text());
-            const totalPrice = calculateTotalPrice(basePrice, quantity);
+            const remark = $('#product-remark-input').val(); // 获取备注
 
-            // 更新购物车数据
-            if (!cart.items[productId]) {
-                cart.items[productId] = { name: productName, quantity: 0, totalPrice: 0, unitPrice: basePrice };
+            let variantPrice = 0;
+            let selectedVariants = [];
+
+            // 获取选中的变体（如 hot 或 ice）
+            $('#modal-variant-options .form-check-input:checked').each(function() {
+                selectedVariants.push($(this).data('name')); // 获取变体的名称
+                variantPrice += parseFloat($(this).data('price')); // 获取变体的价格
+            });
+
+            const totalPrice = (basePrice + variantPrice) * quantity;
+
+            // 如果没有选中变体，则视为没有变体
+            if (selectedVariants.length === 0) {
+                selectedVariants.push('No variant selected'); // 标记为无变体
             }
 
-            cart.items[productId].quantity += quantity;
-            cart.items[productId].totalPrice += totalPrice;
+            // 遍历每个选中的变体，分别作为一个单独的购物车项目
+            selectedVariants.forEach(function(variant) {
+                const variantName = `${productName} (${variant})`; // 在名称中加上变体名称（例如：Ice Lemon Tea (Ice)）
 
-            // 更新总数量和总价格
-            cart.totalQuantity = Object.values(cart.items).reduce((sum, item) => sum + item.quantity, 0);
-            cart.totalPrice = Object.values(cart.items).reduce((sum, item) => sum + item.totalPrice, 0);
+                if (!cart.items[variantName]) {
+                    cart.items[variantName] = { 
+                        name: variantName, 
+                        quantity: 0, 
+                        totalPrice: 0, 
+                        unitPrice: basePrice, 
+                        variantPrice: 0, 
+                        variants: selectedVariants, // 存储变体名称
+                        remark: remark 
+                    };
+                }
 
-            // 更新显示
+                cart.items[variantName].quantity += quantity;
+                cart.items[variantName].totalPrice += totalPrice;
+                cart.items[variantName].variantPrice = variantPrice;
+
+                cart.totalQuantity = Object.values(cart.items).reduce((sum, item) => sum + item.quantity, 0);
+                cart.totalPrice = Object.values(cart.items).reduce((sum, item) => sum + item.totalPrice, 0);
+            });
+
             updateCartDisplay();
-            updateProductQuantityDisplay(productId);
+            selectedVariants.forEach(function(variant) { updateProductQuantityDisplay(productId, variant); 
+            });
+            updateCartModal();
 
-            // 关闭模态框
+            localStorage.setItem('cart', JSON.stringify(cart));
+
             $('#foodModal').fadeOut(200).removeClass('show');
         });
 
-        // 初始化购物车显示
-        updateCartDisplay();
-      });
-      //add to cart end
 
-
-
-      document.querySelector('#view-cart-btn').addEventListener('click', function () {
-    // 发送请求到后端，获取购物车数据
-    fetch('/order/cart', {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-        },
-    })
-        .then(response => response.json())
-        .then(cart => {
-            // 更新 My Cart 弹窗中的内容
-            const cartContainer = document.querySelector('.my-cart-items');
-            cartContainer.innerHTML = ''; // 清空旧内容
-
-            if (Object.keys(cart).length === 0) {
-                cartContainer.innerHTML = '<p>Your cart is empty.</p>';
-            } else {
-                for (const productId in cart) {
-                    const item = cart[productId];
-                    cartContainer.innerHTML += `
-                        <div class="cart-item">
-                            <img src="${item.product_img}" alt="${item.product_name}">
-                            <div class="item-details">
-                                <h5>${item.product_name}</h5>
-                                <p class="item-remark">${item.remark || ''}</p>
-                                <div class="item-price">RM ${item.unit_price}</div>
-                            </div>
-                            <div class="quantity-controls">
-                                <button class="quantity-btn minus" data-id="${productId}">-</button>
-                                <span class="quantity">${item.quantity}</span>
-                                <button class="quantity-btn plus" data-id="${productId}">+</button>
-                            </div>
-                        </div>`;
+        // 处理数量增减
+        $(document).on('click', '.quantity-btn.minus', function() {
+            const productId = $(this).data('product-id');
+            if (cart.items[productId]) {
+                cart.items[productId].quantity -= 1;
+                cart.items[productId].totalPrice -= cart.items[productId].unitPrice;
+                if (cart.items[productId].quantity <= 0) {
+                    delete cart.items[productId];
                 }
+                cart.totalQuantity = Object.values(cart.items).reduce((sum, item) => sum + item.quantity, 0);
+                cart.totalPrice = Object.values(cart.items).reduce((sum, item) => sum + item.totalPrice, 0);
+                updateCartDisplay();
+                updateProductQuantityDisplay(productId);
+                updateCartModal();
+
+                localStorage.setItem('cart', JSON.stringify(cart));
+
             }
-
-            // 显示 My Cart 弹窗
-            document.querySelector('#myCartModal').style.display = 'block';
         });
-});
 
-document.addEventListener('click', function (e) {
-    if (e.target.classList.contains('quantity-btn')) {
-        const isPlus = e.target.classList.contains('plus');
-        const productId = e.target.dataset.id;
-        const quantityElement = e.target.closest('.quantity-controls').querySelector('.quantity');
-        let newQuantity = parseInt(quantityElement.textContent);
+        $(document).on('click', '.quantity-btn.plus', function() {
+            const productId = $(this).data('product-id');
+            if (cart.items[productId]) {
+                cart.items[productId].quantity += 1;
+                cart.items[productId].totalPrice += cart.items[productId].unitPrice + cart.items[productId].variantPrice;
+                cart.totalQuantity = Object.values(cart.items).reduce((sum, item) => sum + item.quantity, 0);
+                cart.totalPrice = Object.values(cart.items).reduce((sum, item) => sum + item.totalPrice, 0);
+                updateCartDisplay();
+                updateProductQuantityDisplay(productId);
+                updateCartModal();
+            }
+        });
 
-        newQuantity = isPlus ? newQuantity + 1 : newQuantity - 1;
-        if (newQuantity < 1) return;
+        // 显示购物车模态框
+        $('.view-cart-btn').click(function() {
+            updateCartModal();
+            $('#myCartModal').fadeIn(200).addClass('show');
+        });
 
-        fetch('/order/cart/update', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            },
-            body: JSON.stringify({ product_id: productId, quantity: newQuantity }),
-        })
-            .then(response => response.json())
-            .then(() => {
-                quantityElement.textContent = newQuantity;
-            });
-    }
-});
+        $('.my-cart-back-btn').click(function() {
+            $('#myCartModal').fadeOut(200).removeClass('show');
+        });
 
-document.addEventListener('click', function (e) {
-    if (e.target.classList.contains('remove-btn')) {
-        const productId = e.target.dataset.id;
+        // 打开模态框时设置产品ID
+        $('.add-btn').each(function () {
+          const productId = $(this).data('product-id'); // 获取按钮的 product_id
+          updateProductQuantityDisplay(productId);
+        });
 
-        fetch('/order/cart/remove', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            },
-            body: JSON.stringify({ product_id: productId }),
-        })
-            .then(response => response.json())
-            .then(() => {
-                e.target.closest('.cart-item').remove();
-            });
-    }
-});
+    });
 
-document.addEventListener('click', function (e) {
-    if (e.target.classList.contains('add-btn')) {
-        const productId = e.target.dataset.productId;
-        const productData = JSON.parse(e.target.dataset.product);
+    
 
-        fetch('/order/cart/add', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            },
-            body: JSON.stringify({ product_id: productId, product: productData }),
-        })
-            .then(response => response.json())
-            .then(data => {
-                alert('Product added to cart!');
-                // 可更新页面上的购物车数量显示
-                document.querySelector('.cart-count').textContent = data.cart_count;
-            });
-    }
-});
 
+           
 
     </script>
 
