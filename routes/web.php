@@ -4,6 +4,10 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\UserLoginController;
+use App\Http\Controllers\myOrderController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -30,6 +34,17 @@ if (!function_exists('set_active')) {
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/show-qrcode', function () {
+    return view('scanQR');
+});
+
+Route::get('/userlogin', [UserLoginController::class, 'showLoginForm'])->name('userlogin');
+
+Route::post('/store-user-info', [UserLoginController::class, 'storeUserInfo'])->name('storeUserInfo');
+
+
+
 
 // Route::get('/order', function () {
 //     return view('layout');
@@ -89,7 +104,7 @@ Route::post('/categories/delete-multiple', [CategoryController::class, 'deleteMu
 Route::post('/categories/search', [CategoryController::class, 'search'])->name('categories.search');
 
 //USER USER USER USER USER USER
-Route::get('/order', [CategoryController::class, 'showMenu']);
+Route::get('/order', [CategoryController::class, 'showMenu'])->name('menu');
 
 
 
@@ -120,10 +135,9 @@ Route::post('/products/search', [ProductController::class, 'search'])->name('pro
 
 
 
-//cart
+//myorder
+Route::post('/submit-order', [myOrderController::class, 'store'])->name('order.store');
 
-Route::post('/order/cart/add', [CartController::class, 'addToCart']);
-Route::post('/order/cart/update', [CartController::class, 'updateCart']);
-Route::post('/order/cart/remove', [CartController::class, 'removeFromCart']);
-Route::get('/order/cart', [CartController::class, 'getCart']); // 用于获取当前购物车数据
+Route::get('/my-order/{orderId}', [myOrderController::class, 'show'])->name('myOrder.show');
+
 
