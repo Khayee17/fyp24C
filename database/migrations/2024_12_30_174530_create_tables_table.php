@@ -13,14 +13,11 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('my_orders', function (Blueprint $table) {
+        Schema::create('tables', function (Blueprint $table) {
             $table->id();
-            $table->integer('customer_count')->default(1);
-            $table->json('items'); // Stores all cart items in JSON format
-            $table->decimal('subtotal', 8, 2);
-            $table->decimal('sst', 8, 2);
-            $table->decimal('rounding', 8, 2)->default(0.00);
-            $table->decimal('total', 8, 2);
+            $table->string('name'); // 桌位名称，例如桌号
+            $table->enum('status', ['available', 'occupied'])->default('available'); // 桌位状态，默认为可用        
+            $table->integer('capacity');
             $table->timestamps();
         });
     }
@@ -32,6 +29,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('my_orders');
+        Schema::dropIfExists('tables');
     }
 };

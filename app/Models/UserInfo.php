@@ -8,13 +8,16 @@ use Illuminate\Database\Eloquent\Model;
 class UserInfo extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'phone', 
-        'numberOfCustomers'
+        'numberOfCustomers',
+        'order_id', // 确保添加 order_id 字段
     ];
 
-    public function orders()
+    // 一对一关系：UserInfo 属于 MyOrder
+    public function order()
     {
-        return $this->hasMany(MyOrder::class, 'user_info_id');
+        return $this->belongsTo(MyOrder::class, 'order_id', 'id');
     }
 }

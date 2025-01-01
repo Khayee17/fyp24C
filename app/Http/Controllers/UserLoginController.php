@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB; 
 use Illuminate\Support\Facades\Storage;
 use App\Models\UserInfo; 
+use App\Models\MyOrder;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class UserLoginController extends Controller
@@ -18,17 +19,25 @@ class UserLoginController extends Controller
     }
 
     // 处理用户信息存储
-    public function storeUserInfo(Request $request)
+    public function saveUserInfo(Request $request)
     {
-        $validated = $request->validate([
-            'phone' => 'required',
-            'numberOfCustomers' => 'required|integer',
+        $validatedData = $request->validate([
+            'phone' => 'required|string|min:10|max:15',
+            'numberOfCustomers' => 'required|integer|min:1',
         ]);
-
-        // 存储到数据库
-        UserInfo::create($validated);
-
-        // 重定向到菜单页面
+    
+        // Save user info in the database
+        $userInfo = UserInfo::create([
+            'phone' => $validatedData['phone'],
+            'numberOfCustomers' => $validatedData['numberOfCustomers'],
+        ]);
+    
+        // Store in session
+        session([
+            'phone' => $validatedData['phone'],
+            'numberOfCustomers' => $validatedData['numberOfCustomers'],
+        ]);
+       
         return redirect()->route('menu');
     }
     

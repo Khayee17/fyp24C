@@ -305,13 +305,16 @@
 								<a href="/amdashboard"><i class="la la-users"></i> <span>Dashboard</span></a>
 							</li>
 							<li class="menu-title"> 
-								<span>Menu</span>
+								<span>Manage</span>
 							</li>
 							<li> 
 								<a href="/categories"><i class="la la-users"></i> <span>Category</span></a>
 							</li>
 							<li> 
 								<a href="/products"><i class="la la-users"></i> <span>Product</span></a>
+							</li>
+							<li> 
+								<a href="/tables"><i class="la la-users"></i> <span>Table</span></a>
 							</li>
 							
 							<li class="menu-title"> 

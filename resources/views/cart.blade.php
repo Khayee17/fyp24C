@@ -292,226 +292,108 @@
 
     });
 
+    $('#confirmOrderBtn').click(function() {
+        const cart = JSON.parse(localStorage.getItem('cart'));
 
-    // 确认订单
-    // $('#confirmOrderBtn').click(function() {
-    //     const cart = JSON.parse(localStorage.getItem('cart'));
-
-    //     if (!cart || Object.keys(cart.items).length === 0) {
-    //         alert('Your cart is empty!');
-    //         return;
-    //     }
-
-    //     const orderData = {
-    //         customer_count: $('#orderCustomerCount').text(),
-    //         items: Object.values(cart.items).map(item => ({
-    //             name: item.name,
-    //             quantity: item.quantity,
-    //             price: item.unitPrice + item.variantPrice,
-    //             remark: item.remark
-    //         })),
-    //         total_price: cart.totalPrice
-    //     };
-
-    //     $.ajax({
-    //         url: '/submit-order', // 确保这个URL与后端路由匹配
-    //         method: 'POST',
-    //         data: JSON.stringify(orderData),
-    //         contentType: 'application/json',
-    //         success: function(response) {
-    //             alert('Order saved successfully! Order ID: ' + response.order_id);
-    //             // 清空购物车
-    //             localStorage.removeItem('cart');
-    //             // 更新UI
-    //             updateCartDisplay();
-    //             updateCartModal();
-    //         },
-    //         error: function(error) {
-    //             alert('Failed to save order. Please try again.');
-    //         }
-    //     });
-
-    //     const orderItemsContainer = $('.my-order-items');
-    //     orderItemsContainer.empty(); // 清空旧内容
-
-    //     // 渲染订单项目
-    //     for (const productId in cart.items) {
-    //         const item = cart.items[productId];
-    //         const variantText = item.variants && item.variants.length > 0 
-    //             ? item.variants.join(', ') 
-    //             : 'No variant selected';
-
-    //         const orderItemHTML = `
-
-    //             <div class="order-item">
-    //                 <img src="/storage/${item.product_img}" alt="${item.name} class="product-image">
-    //                 <div class="item-details">
-    //                     <p>${item.name}</p>
-    //                     <p class="item-note">${variantText} </p>
-    //                     <p class="item-price">RM ${item.unitPrice.toFixed(2)} <span class="item-quantity">x ${item.quantity}</span></p>
-    //                 </div>
-    //             </div>
-                
-    //         `;
-    //         orderItemsContainer.append(orderItemHTML);
-    //     }
-
-    //     // 渲染订单总结
-    //     const subtotal = cart.totalPrice;
-    //     const sst = subtotal * 0.06;
-    //     const totalBeforeRounding = subtotal + sst;
-    //     const rounding = Math.round(totalBeforeRounding * 20) / 20 - totalBeforeRounding;
-    //     const total = Math.round(totalBeforeRounding * 20) / 20;
-
-    //     $('.order-summary .summary-item:nth-child(1) span:nth-child(2)').text(`RM ${subtotal.toFixed(2)}`);
-    //     $('.order-summary .summary-item:nth-child(2) span:nth-child(2)').text(`RM ${sst.toFixed(2)}`);
-    //     $('.order-summary .summary-item:nth-child(3) span:nth-child(2)').text(`RM ${rounding.toFixed(2)}`);
-    //     $('.order-summary .order-list-total span:nth-child(2)').text(`RM ${total.toFixed(2)}`);
-
-    //     $('#orderDetails').fadeIn(200).addClass('show'); // 显示订单模态框
-    //     $('#myCartModal').fadeOut(200).removeClass('show'); // 隐藏购物车模态框
-    // });
-    
-//     $('#confirmOrderBtn').click(function() {
-//     const cart = JSON.parse(localStorage.getItem('cart'));
-
-//     if (!cart || Object.keys(cart.items).length === 0) {
-//         alert('Your cart is empty!');
-//         return;
-//     }
-
-//     const orderData = {
-//         customer_count: $('#customerCount').text(),
-//         items: Object.values(cart.items).map(item => ({
-//             name: item.name,
-//             quantity: item.quantity,
-//             price: item.unitPrice + item.variantPrice,
-//             remark: item.remark
-//         })),
-//         total_price: cart.totalPrice
-//     };
-
-//     $.ajax({
-//         url: '/submit-order', // 确保这个URL与后端路由匹配
-//         method: 'POST',
-//         data: JSON.stringify(orderData),
-//         contentType: 'application/json',
-//         success: function(response) {
-//             alert('Order saved successfully! Order ID: ' + response.order_id);
-//             // 清空购物车
-//             localStorage.removeItem('cart');
-//             // 更新UI
-//             updateCartDisplay();
-//             updateCartModal();
-//         },
-//         error: function(error) {
-//             alert('Failed to save order. Please try again.');
-//         }
-//     });
-// });
-
-
-
-
-
-
-
-// new code
-// new code
-// new code
-// new code
-// new code
-// new code
-// new code
-// new code
-// new code
-
-$('#confirmOrderBtn').click(function() {
-    const cart = JSON.parse(localStorage.getItem('cart'));
-
-    if (!cart || Object.keys(cart.items).length === 0) {
-        alert('Your cart is empty!');
-        return;
-    }
-
-    // Calculate order details
-    const subtotal = cart.totalPrice;
-    const sst = subtotal * 0.06; // 6% SST
-    const totalBeforeRounding = subtotal + sst;
-    const rounding = Math.round(totalBeforeRounding * 20) / 20 - totalBeforeRounding;
-    const total = Math.round(totalBeforeRounding * 20) / 20;
-
-    // Define orderData before using it
-    const orderData = {
-        // customer_count: 3, 
-        customer_count: $('#orderCustomerCount').text(),
-        items: Object.values(cart.items).map(item => ({
-            name: item.name,
-            quantity: item.quantity,
-            price: item.unitPrice + item.variantPrice,
-            remark: item.remark
-        })),
-        subtotal: subtotal.toFixed(2),
-        sst: sst.toFixed(2),
-        rounding: rounding.toFixed(2),
-        total: total.toFixed(2),
-    };
-
-    // Set up CSRF token for AJAX
-    $.ajaxSetup({
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        if (!cart || !cart.items || Object.keys(cart.items).length === 0) {
+            alert('Your cart is empty!');
+            return;
         }
-    });
+            
+        // Retrieve user info from localStorage
+        const phone = localStorage.getItem('phone');
+        const numberOfCustomers = localStorage.getItem('numberOfCustomers');
 
-    // Send AJAX request
-    $.ajax({
-        url: '/submit-order', // Ensure this URL matches your backend route
-        method: 'POST',
-        data: JSON.stringify(orderData),
-        contentType: 'application/json',
-        success: function(response) {
-            alert('Order saved successfully! Order ID: ' + response.order_id);
-            localStorage.removeItem('cart');
-            updateCartDisplay();
-            updateCartModal();
-        },
-        error: function(error) {
-            alert('Failed to save order. Please try again.');
+        // 检查数据是否存在
+        if (!phone || !numberOfCustomers || isNaN(numberOfCustomers) || numberOfCustomers <= 0) {
+            alert('User information is missing or invalid. Please log in again.');
+            // 可以重定向用户到登录页面
+            window.location.href = '/userlogin';
+            return;
         }
-    });
 
-    // Render order items and summary
-    const orderItemsContainer = $('.my-order-items');
-    orderItemsContainer.empty();
+        const subtotal = Object.values(cart.items).reduce((acc, item) => {
+            return acc + ((item.unitPrice || 0) + (item.variantPrice || 0)) * item.quantity;
+        }, 0);
+        const sst = subtotal * 0.06;
+        const totalBeforeRounding = subtotal + sst;
+        const rounding = Math.round(totalBeforeRounding * 20) / 20 - totalBeforeRounding;
+        const total = Math.round(totalBeforeRounding * 20) / 20;
 
-    for (const productId in cart.items) {
-        const item = cart.items[productId];
-        const variantText = item.variants && item.variants.length > 0 
-            ? item.variants.join(', ') 
-            : 'No variant selected';
+        const orderData = {
+            phone: phone,
+            numberOfCustomers: numberOfCustomers,
+            items: Object.values(cart.items).map(item => ({
+                name: item.name,
+                quantity: item.quantity,
+                price: (item.unitPrice || 0) + (item.variantPrice || 0),
+                remark: item.remark || '',
+                variant_text: item.variants ? item.variants.join(', ') : null
+            })),
+            subtotal: parseFloat(subtotal.toFixed(2)),
+            sst: parseFloat(sst.toFixed(2)),
+            rounding: parseFloat(rounding.toFixed(2)),
+            total: parseFloat(total.toFixed(2)),
+            status: 'pending'
+        };
 
-        const orderItemHTML = `
-            <div class="order-item">
-                <img src="/storage/${item.product_img}" alt="${item.name}" class="product-image">
-                <div class="item-details">
-                    <p>${item.name}</p>
-                    <p class="item-note">${variantText}</p>
-                    <p class="item-price">RM ${item.unitPrice.toFixed(2)} <span class="item-quantity">x ${item.quantity}</span></p>
+        $.ajax({
+            url: '/submit-order',
+            method: 'POST',
+            data: JSON.stringify(orderData),
+            contentType: 'application/json',
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(response) {
+                alert('Order saved successfully! Order ID: ' + response.order_id);
+                localStorage.removeItem('cart');
+            },
+            error: function(error) {
+                alert('Failed to save order. Please try again.');
+                console.error('Error:', error.responseJSON);
+            }
+        });
+
+        // Render the order items and summary
+        const orderItemsContainer = $('.my-order-items');
+        orderItemsContainer.empty();
+
+        for (const productId in cart.items) {
+            const item = cart.items[productId];
+            const variantText = item.variants && item.variants.length > 0 
+                ? item.variants.join(', ') 
+                : 'No variant selected';
+
+            const orderItemHTML = `
+                <div class="order-item">
+                    <img src="/storage/${item.product_img}" alt="${item.name}" class="product-image">
+                    <div class="item-details">
+                        <p>${item.name}</p>
+                        <p class="item-note">${variantText}</p>
+                        <p class="item-price">
+                            RM ${(item.unitPrice || 0) + (item.variantPrice || 0)} 
+                            <span class="item-quantity">x ${item.quantity}</span>
+                        </p>
+                    </div>
                 </div>
-            </div>
-        `;
-        orderItemsContainer.append(orderItemHTML);
-    }
+            `;
+            orderItemsContainer.append(orderItemHTML);
+        }
 
-    $('.order-summary .summary-item:nth-child(1) span:nth-child(2)').text(`RM ${subtotal.toFixed(2)}`);
-    $('.order-summary .summary-item:nth-child(2) span:nth-child(2)').text(`RM ${sst.toFixed(2)}`);
-    $('.order-summary .summary-item:nth-child(3) span:nth-child(2)').text(`RM ${rounding.toFixed(2)}`);
-    $('.order-summary .order-list-total span:nth-child(2)').text(`RM ${total.toFixed(2)}`);
+        // Update order summary details
+        $('.order-summary .summary-item:nth-child(1) span:nth-child(2)').text(`RM ${subtotal.toFixed(2)}`);
+        $('.order-summary .summary-item:nth-child(2) span:nth-child(2)').text(`RM ${sst.toFixed(2)}`);
+        $('.order-summary .summary-item:nth-child(3) span:nth-child(2)').text(`RM ${rounding.toFixed(2)}`);
+        $('.order-summary .order-list-total span:nth-child(2)').text(`RM ${total.toFixed(2)}`);
 
-    $('#orderDetails').fadeIn(200).addClass('show');
-    $('#myCartModal').fadeOut(200).removeClass('show');
-});
+        // Show order details and hide the cart modal
+        $('#orderDetails').fadeIn(200).addClass('show');
+        $('#myCartModal').fadeOut(200).removeClass('show');
+    });
+
+
+
 // new code
 // new code
 // new code
@@ -526,72 +408,6 @@ $('#confirmOrderBtn').click(function() {
 
 
 
-
-
-
-    // $('#confirmOrderBtn').click(function() {
-    //     const cart = JSON.parse(localStorage.getItem('cart'));
-
-    //     if (!cart || Object.keys(cart.items).length === 0) {
-    //         alert('Your cart is empty!');
-    //         return;
-    //     }
-
-    //     // 显示确认订单的弹窗
-    //     $('#confirmOrderModal').fadeIn(200);
-
-    //     // 点击“是”时确认订单
-    //     $('#confirmYes').click(function() {
-    //         const orderItemsContainer = $('.my-order-items');
-    //         orderItemsContainer.empty(); // 清空旧内容
-
-    //         // 渲染订单项目
-    //         for (const productId in cart.items) {
-    //             const item = cart.items[productId];
-    //             const variantText = item.variants && item.variants.length > 0 
-    //                 ? item.variants.join(', ') 
-    //                 : 'No variant selected';
-
-    //             const orderItemHTML = `
-    //                 <div class="order-item">
-    //                     <img src="/storage/${item.product_img}" alt="${item.name}" class="product-image">
-    //                     <div class="item-details">
-    //                         <p>${item.name}</p>
-    //                         <p class="item-note">${variantText}</p>
-    //                         <p class="item-price">RM ${item.unitPrice.toFixed(2)} <span class="item-quantity">x ${item.quantity}</span></p>
-    //                     </div>
-    //                 </div>
-    //             `;
-    //             orderItemsContainer.append(orderItemHTML);
-    //         }
-
-    //         // 渲染订单总结
-    //         const subtotal = cart.totalPrice;
-    //         const sst = subtotal * 0.06;
-    //         const totalBeforeRounding = subtotal + sst;
-    //         const rounding = Math.round(totalBeforeRounding * 20) / 20 - totalBeforeRounding;
-    //         const total = Math.round(totalBeforeRounding * 20) / 20;
-
-    //         $('.order-summary .summary-item:nth-child(1) span:nth-child(2)').text(`RM ${subtotal.toFixed(2)}`);
-    //         $('.order-summary .summary-item:nth-child(2) span:nth-child(2)').text(`RM ${sst.toFixed(2)}`);
-    //         $('.order-summary .summary-item:nth-child(3) span:nth-child(2)').text(`RM ${rounding.toFixed(2)}`);
-    //         $('.order-summary .order-list-total span:nth-child(2)').text(`RM ${total.toFixed(2)}`);
-
-    //         // 显示订单模态框
-    //         $('#orderDetails').fadeIn(200).addClass('show');
-    //         // 隐藏购物车模态框
-    //         $('#myCartModal').fadeOut(200).removeClass('show');
-    //         // 隐藏确认订单弹窗
-    //         $('#confirmOrderModal').fadeOut(200);
-    //     });
-
-    //     // 点击“否”时关闭确认订单弹窗
-    //     $('#confirmNo').click(function() {
-    //         $('#confirmOrderModal').fadeOut(200);
-    //     });
-    // });
-
-    
 
 
 </script>

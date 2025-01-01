@@ -6,6 +6,8 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
     <title>Dine Queue</title>
     <style>
         body {
@@ -94,17 +96,34 @@
                 <i class="fas fa-users"></i>
                 <input type="text" name="numberOfCustomers" placeholder="Number of Customers" required>
             </div>
-            <button type="submit"class="button">Next</button>
+            <button type="submit"class="button" id="saveUserInfoBtn">Next</button>
         </form>
     </div>
 
     <div class="background"></div>
 
     <script>
-    document.querySelector('form').addEventListener('submit', function(event) {
-        const numberOfCustomers = document.querySelector('input[name="numberOfCustomers"]').value;
-        localStorage.setItem('numberOfCustomers', numberOfCustomers);
-    });
+
+        document.querySelector('form').addEventListener('submit', function(event) {
+
+            // 获取用户输入的值
+            const numberOfCustomers = document.querySelector('input[name="numberOfCustomers"]').value.trim();
+            const phone = document.querySelector('input[name="phone"]').value.trim();
+
+            // 简单校验数据
+            if (!phone || !numberOfCustomers || isNaN(numberOfCustomers) || parseInt(numberOfCustomers) <= 0) {
+                alert('Please enter valid information.');
+                return;
+            }
+
+            // 存储到 localStorage
+            localStorage.setItem('numberOfCustomers', numberOfCustomers);
+            localStorage.setItem('phone', phone);
+
+            
+        });
+
+
     </script>
     
 </body>

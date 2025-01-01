@@ -15,14 +15,16 @@ return new class extends Migration
     {
         Schema::create('order_items', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('order_id')->constrained()->onDelete('cascade');
+            $table->unsignedBigInteger('order_id');
             $table->string('product_name');
             $table->integer('quantity');
             $table->decimal('price', 8, 2);
-            $table->string('remark')->nullable();
+            $table->string('variant_text')->nullable();  
+            $table->text('remark')->nullable();
             $table->timestamps();
+        
+            $table->foreign('order_id')->references('id')->on('my_orders')->onDelete('cascade'); // 确保这里的表名正确
         });
-
     }
 
     /**

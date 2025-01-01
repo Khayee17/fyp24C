@@ -52,8 +52,8 @@
                 </div>
             </div>
             <div class="order-meta">
-                <span>NO. 123456</span>
-                <span>26-7-2024 01:29pm</span>
+                <span id="order-id">Order Id: No. </span>
+                <span id="order-created-at"> </span>
             </div>
             
             <div class="my-order-items" id="orderItems"></div>

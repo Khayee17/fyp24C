@@ -7,6 +7,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\UserLoginController;
 use App\Http\Controllers\myOrderController;
+use App\Http\Controllers\TableController;
 
 /*
 |--------------------------------------------------------------------------
@@ -41,7 +42,7 @@ Route::get('/show-qrcode', function () {
 
 Route::get('/userlogin', [UserLoginController::class, 'showLoginForm'])->name('userlogin');
 
-Route::post('/store-user-info', [UserLoginController::class, 'storeUserInfo'])->name('storeUserInfo');
+Route::post('/save-user-info', [UserLoginController::class, 'saveUserInfo'])->name('storeUserInfo');
 
 
 
@@ -139,5 +140,24 @@ Route::post('/products/search', [ProductController::class, 'search'])->name('pro
 Route::post('/submit-order', [myOrderController::class, 'store'])->name('order.store');
 
 Route::get('/my-order/{orderId}', [myOrderController::class, 'show'])->name('myOrder.show');
+
+
+Route::get('/waitlist', [myOrderController::class, 'showWaitlist']);
+
+Route::post('/submit-order/{orderId}/assign-table', [OrderController::class, 'assignTable']);
+
+Route::post('/submit-order/{orderId}/complete', [OrderController::class, 'completeOrder']);
+
+
+Route::get('/tables', [TableController::class, 'index'])->name('tables.index'); // 显示页面
+Route::post('/tables', [TableController::class, 'store'])->name('tables.store'); // 创建桌位
+Route::put('/tables/{table}', [TableController::class, 'update'])->name('tables.update'); // 更新桌位
+Route::delete('/tables/{table}', [TableController::class, 'destroy'])->name('tables.destroy'); // 删除桌位
+// routes/web.php
+Route::get('waitlist/updateTablePrice', [MyOrderController::class, 'updateTablePrice'])->name('updateTablePrice');
+
+
+
+
 
 

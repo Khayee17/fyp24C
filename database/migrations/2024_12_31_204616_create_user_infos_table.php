@@ -17,7 +17,8 @@ return new class extends Migration
             $table->id();
             $table->string('phone');
             $table->integer('numberOfCustomers');
-            $table->string('queue_number')->nullable(); 
+            $table->unsignedBigInteger('order_id')->nullable();  // 添加 order_id 字段，nullable 允许为空
+            $table->foreign('order_id')->references('id')->on('my_orders')->onDelete('cascade'); // 添加外键约束
             $table->timestamps();
         });
     }
@@ -29,6 +30,11 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('user_infos');
+        Schema::table('user_infos', function (Blueprint $table) {
+            $table->dropForeign(['order_id']); // 删除外键约束
+            $table->dropColumn('order_id');  // 删除 order_id 字段
+        });
+
+        Schema::dropIfExists('user_infos'); // 删除整个表
     }
 };
