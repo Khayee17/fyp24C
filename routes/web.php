@@ -146,13 +146,13 @@ Route::get('/waitlist', [myOrderController::class, 'showWaitlist']);
 
 Route::post('/assignTable/{orderId}', [myOrderController::class, 'assignTable'])->name('assignTable');
 
+Route::get('/order/{id}', [myOrderController::class, 'showOrderDetails']);
 
 Route::post('/admin/order/complete/{orderId}', [myOrderController::class, 'completeOrder']);
 
 Route::post('/notify', [App\Http\Controllers\myOrderController::class, 'sendMessage']);
 
-
-// Route::post('/submit-order/{orderId}/complete', [myOrderController::class, 'completeOrder']);
+Route::get('/calculate-estimated-wait-time', [myOrderController::class, 'calculateEstimatedWaitTime']);
 
 
 //admin table

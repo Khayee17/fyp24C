@@ -157,6 +157,7 @@
         font-family: Arial, sans-serif; /* 字体样式 */
         font-size: 15px;
         transition: transform 0.2s, box-shadow 0.2s;
+        position: relative;
     }
     
     
@@ -184,10 +185,46 @@
         padding: 0 15px; 
     }
 
-    .table-item .table-price {
-        font-size: 14px; /* 金额字体大小 */
-        margin-top: 5px;
+    .table-item .view-order-button,
+    .table-item .complete-order-button {
+        display: none; /* 初始时隐藏按钮 */
+        background-color: #007bff; /* 蓝色背景 */
+        color: white; /* 白色字体 */
+        border: none; /* 去掉默认边框 */
+        border-radius: 12px; /* 圆角 */
+        padding: 5px 16px; /* 按钮内边距 */
+        font-size: 14px; /* 字体大小 */
+        cursor: pointer; /* 鼠标指针 */
+        transition: background-color 0.3s, transform 0.2s; /* 平滑过渡效果 */
+        position: absolute; /* 定位到 .table-item 内部 */
+        bottom: 10px; /* 定位到底部 */
+        left: 50%; /* 水平居中 */
+        transform: translateX(-50%); /* 水平居中 */
+        margin: 5px 0; /* 上下间距 */
     }
+
+    .table-item:hover .view-order-button,
+    .table-item:hover .complete-order-button {
+        display: block; /* 悬停时显示按钮为块级元素 */
+    }
+    .table-item:hover .view-order-button {
+        bottom: 40px; /* 调整 View 按钮的位置 */
+    }
+
+    .table-item:hover .complete-order-button {
+        bottom: 5px; /* Complete 按钮的位置 */
+    }
+
+    .table-item:hover .table-label.occupied,
+    .table-item:hover .table-status.occupied {
+        opacity: 0; 
+    }
+
+    .view-order-button:hover,
+    .complete-order-button:hover {
+        background-color: #0056b3;
+    }
+
 
 </style>
 
@@ -233,7 +270,7 @@
                                         <div class="buttons">
                                             <button class="notify-button" data-order-id="{{ $order->id }}" data-phone="{{ $order->phone }}">Notify</button>
                                             <button class="seat-button" data-order-id="{{ $order->id }}">Seat</button>
-                                            <button>View</button>
+                                            <button class="view-order" data-order-id="{{ $order->id }}">View</button>
                                         </div>
                                         <p><small>{{ $order->created_at->format('M d, Y h:i A') }}</small></p>
                                     </div>
@@ -253,9 +290,9 @@
                                     <p><strong>Seated: </strong>Table {{ $order->table->name }}</p>
                                     <div class="buttons">
                                         <button class="notify-button" data-order-id="{{ $order->id }}">Notify</button>
-                                        <button>View</button>
+                                        <button class="view-order" data-order-id="{{ $order->id }}">View</button>
+                                        <button class="complete-order-button" data-order-id="{{ $order->id }}" data-table-id="{{ $order->table->id }}">Complete</button>
                                     </div>
-                                    <button class="complete-order-button" data-order-id="{{ $order->id }}" data-table-id="{{ $order->table->id }}">Complete</button>
                                     <p><small>{{ $order->updated_at->format('M d, Y h:i A') }}</small></p>
                                 </div>
                             @endforeach
@@ -268,13 +305,12 @@
                             <div class="scrollable-list">
                                 <!-- List Items -->
                                 @foreach ($historyOrders as $order)
-                                    <div class="waitlist-item">
+                                    <div class="waitlist-item" data-order-id="{{ $order->id }}" data-created-at="{{ strtotime($order->updated_at) }}">
                                         <h3>Order ID: {{ $order->id }} - <span class="phone-number">{{ $order->userInfo ? $order->userInfo->phone : 'No phone number' }}</span></h3>
                                         <p><strong>People:</strong> {{ $order->userInfo ? $order->userInfo->numberOfCustomers : 'No customer count' }}</p>
-                                        <!-- <p><strong>History:</strong> Completed</p> -->
                                         <div class="buttons">
                                             <button class="notify-button" data-order-id="{{ $order->id }}">Notify</button>
-                                            <button>View</button>
+                                            <button class="view-order" data-order-id="{{ $order->id }}">View</button>
                                         </div>
                                         <p><small>{{ $order->updated_at->format('M d, Y h:i A') }}</small></p>
                                     </div>
@@ -293,11 +329,12 @@
                             @foreach ($tables as $table)
                             <div class="table-item" data-table-id="{{ $table->id }}" data-capacity="{{ $table->capacity }}" data-status="{{ $table->status }}" >
                                 <div class="table-label @if($table->status == 'available') available @else occupied @endif">Table {{ $table->name }} </br> ({{ $table->capacity }} pax)</div>
-                                <!-- <div class="table-price">RM {{ number_format($table->price, 2) }}</div> -->
+                                
                                 <div class="table-status">{{ $table->status == 'available' ? 'Available' : 'Occupied' }}</div>
+
                                 @if ($table->status == 'occupied')
-                                    <!-- Add Complete Order button -->
-                                    <button class="complete-order-button" data-table-id="{{ $table->id }}">Complete Order</button>
+                                    <button class="view-order-button" data-table-id="{{ $table->id }}">View</button>
+                                    <button class="complete-order-button" data-table-id="{{ $table->id }}">Complete</button>
                                 @endif
                             </div>
                             @endforeach

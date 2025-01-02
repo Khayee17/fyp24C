@@ -204,13 +204,14 @@ public function showWaitlist()
 
     $historyOrders = MyOrder::with('userInfo')
         ->where('status', 'history')
-        ->orderBy('created_at', 'desc') // 按创建时间降序排列
+        ->orderBy('updated_at', 'desc') // 按创建时间降序排列
         ->get(); // 获取历史订单
 
     $tables = Table::all(); // 获取所有桌位信息
 
     return view('admin.order.waitlist', compact('waitlist', 'seatedOrders', 'historyOrders', 'tables'));
 }
+
 
 public function sendMessage(Request $request)
 {
@@ -255,6 +256,8 @@ public function sendMessage(Request $request)
         ], 500);
     }
 }
+
+
 
 
 
