@@ -6,12 +6,15 @@ use App\Models\OrderItem;
 use App\Models\userInfo;
 use App\Models\MyOrder;
 use App\Models\Table;
+use Carbon\Carbon;
+use Twilio\Rest\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Session;
+
 class myOrderController extends Controller
 {
 
@@ -136,70 +139,130 @@ public function showOrder($orderId)
      if (!$order || $order->status != 'pending') {
          return response()->json(['error' => 'Order not found or already seated'], 400);
      }
-
-     // 查找一个可用的桌位
-     $table = Table::where('status', 'available')->first();
+ 
+     // 获取订单的顾客数量
+     $customerCount = $order->userInfo ? $order->userInfo->numberOfCustomers : 0;
+     if ($customerCount <= 0) {
+         return response()->json(['error' => 'Invalid customer count'], 400);
+     }
+ 
+     // 查找一个可用的桌位，且其容量足够容纳当前订单
+     $table = Table::where('status', 'available')
+         ->where('capacity', '>=', $customerCount)
+         ->first();
+ 
      if ($table) {
          // 分配桌位并更新状态
          $order->table_id = $table->id;
          $order->status = 'seated';
-         $order->assigned_at = now();
          $order->save();
-
+ 
          // 更新桌位状态
          $table->status = 'occupied';
          $table->save();
-
-         return response()->json(['success' => true, 'order' => $order]);
+ 
+         return response()->json(['success' => true, 'order' => $order, 'table' => $table]);
      } else {
-         return response()->json(['error' => 'No available table'], 400);
+         return response()->json(['error' => 'No suitable table available'], 400);
      }
  }
+ 
 
- // 处理订单完成，更新为历史状态
  public function completeOrder($orderId)
- {
-     $order = MyOrder::find($orderId);
-     if (!$order || $order->status != 'seated') {
-         return response()->json(['error' => 'Order not found or not seated'], 400);
-     }
-
-     // 更新订单为历史状态
-     $order->status = 'history';
-     $order->save();
-
-     // 释放桌位
-     $table = Table::find($order->table_id);
-     if ($table) {
-         $table->status = 'available';
-         $table->save();
-     }
-
-     return response()->json(['success' => true, 'order' => $order]);
- }
-
- public function showWaitlist()
 {
-    $waitlist = MyOrder::with('userInfo')->where('status', 'pending')->get(); // 预加载 userInfo 关系
-    $seatedOrders = MyOrder::with('userInfo')->where('status', 'seated')->get();
-    $historyOrders = MyOrder::with('userInfo')->where('status', 'history')->get();
-    $tables = Table::all();
+    $order = MyOrder::find($orderId);
+    if (!$order || $order->status != 'seated') {
+        return response()->json(['error' => 'Order not found or not seated'], 400);
+    }
+
+    // 更新订单为历史状态
+    $order->status = 'history';
+    $order->save();
+
+    // 释放桌位
+    $table = Table::find($order->table_id);
+    if ($table) {
+        $table->status = 'available';
+        $table->save();
+    }
+
+    return response()->json(['success' => true, 'order' => $order]);
+}
+
+
+public function showWaitlist()
+{
+    $waitlist = MyOrder::with('userInfo')
+        ->where('status', 'pending')
+        ->orderBy('created_at', 'desc') // 按创建时间降序排列
+        ->get(); // 获取待分配的订单
+
+    $seatedOrders = MyOrder::with('userInfo')
+        ->where('status', 'seated')
+        ->orderBy('created_at', 'desc') // 按创建时间降序排列
+        ->get(); // 获取已分配桌位的订单
+
+    $historyOrders = MyOrder::with('userInfo')
+        ->where('status', 'history')
+        ->orderBy('created_at', 'desc') // 按创建时间降序排列
+        ->get(); // 获取历史订单
+
+    $tables = Table::all(); // 获取所有桌位信息
 
     return view('admin.order.waitlist', compact('waitlist', 'seatedOrders', 'historyOrders', 'tables'));
 }
 
-public function updateTablePrice()
+public function sendMessage(Request $request)
 {
-    // 获取所有桌位并计算每个桌位的总价
-    $tables = Table::all(); // 获取所有桌位
-    foreach ($tables as $table) {
-        $table->total_price = MyOrder::where('table_id', $table->id)->sum('total'); // 计算该桌位的总价
+    $request->validate([
+        'phone' => 'required|string',
+        'message' => 'required|string',
+    ]);
+
+    // 修复电话号码格式
+    $phone = $request->phone;
+    if (substr($phone, 0, 1) === '0') {
+        // 替换前导0为国家代码 +60
+        $phone = '+60' . substr($phone, 1);
+    } elseif (!str_starts_with($phone, '+')) {
+        return response()->json([
+            'success' => false,
+            'message' => '电话号码格式无效，请使用国际格式。',
+        ], 400);
     }
 
-    return response()->json([
-        'success' => true,
-        'tables' => $tables
-    ]);
+    $sid = 'ACf67a8e06f8237213ecfefbdd2b7a1981';
+    $token = 'bcd652d306dbac8aa20f4bc35d1026e2';
+    $twilio = new Client($sid, $token);
+
+    try {
+        $twilio->messages->create(
+            "whatsapp:$phone", // 修复后的电话号码
+            [
+                "from" => "whatsapp:+14155238886", // Twilio 提供的 WhatsApp 号码
+                "body" => $request->message,
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'WhatsApp 消息发送成功！',
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => '发送失败：' . $e->getMessage(),
+        ], 500);
+    }
 }
+
+
+
+
+
+
+
+
+
 
 }

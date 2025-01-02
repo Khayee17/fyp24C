@@ -144,11 +144,18 @@ Route::get('/my-order/{orderId}', [myOrderController::class, 'show'])->name('myO
 
 Route::get('/waitlist', [myOrderController::class, 'showWaitlist']);
 
-Route::post('/submit-order/{orderId}/assign-table', [OrderController::class, 'assignTable']);
-
-Route::post('/submit-order/{orderId}/complete', [OrderController::class, 'completeOrder']);
+Route::post('/assignTable/{orderId}', [myOrderController::class, 'assignTable'])->name('assignTable');
 
 
+Route::post('/admin/order/complete/{orderId}', [myOrderController::class, 'completeOrder']);
+
+Route::post('/notify', [App\Http\Controllers\myOrderController::class, 'sendMessage']);
+
+
+// Route::post('/submit-order/{orderId}/complete', [myOrderController::class, 'completeOrder']);
+
+
+//admin table
 Route::get('/tables', [TableController::class, 'index'])->name('tables.index'); // 显示页面
 Route::post('/tables', [TableController::class, 'store'])->name('tables.store'); // 创建桌位
 Route::put('/tables/{table}', [TableController::class, 'update'])->name('tables.update'); // 更新桌位
