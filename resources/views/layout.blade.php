@@ -25,7 +25,7 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" href="/css/modal.css"> 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <!-- 在其他 script 标签后面添加 -->
     <!-- CSS -->
     <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
@@ -65,8 +65,9 @@
           <img src="/images/recLogo.png" alt="Dine Queue" class="logo">
           <hr class="divider">
           <div class="estimated-time">
-            <span class="highlight">Estimated waiting time: 15-20 minutes</span> <span class="highlight">3 groups ahead</span>
-          </div>
+            <span class="highlight" id="estimated-time">Estimated waiting time: Loading...</span>
+            <span class="highlight" id="groups-ahead">0 groups ahead</span>
+        </div>
         </div>
       </div>
 
@@ -220,6 +221,30 @@
     </script>
    
     <script>
+      window.onload = function() {
+        fetch('/api/estimated-wait-time')
+            .then(response => response.json())
+            .then(data => {
+                // 更新页面上的预计等待时间和排队顾客数量
+                let estimatedTimeText = `Estimated waiting time: ${data.estimated_waiting_time} minutes`;
+                let groupsAheadText = `${data.groups_ahead} groups ahead`;
+
+                // 如果预计等待时间为 0，可以显示不同的消息
+                if (data.estimated_waiting_time === 0) {
+                    estimatedTimeText = "No wait, please come in!";
+                }
+
+                document.getElementById('estimated-time').innerText = estimatedTimeText;
+                document.getElementById('groups-ahead').innerText = groupsAheadText;
+            })
+            .catch(error => {
+                console.error('Error fetching estimated wait time:', error);
+                document.getElementById('estimated-time').innerText = "Error loading data";
+                document.getElementById('groups-ahead').innerText = "Error loading data";
+            });
+      }
+
+
       // sticker header
       $(document).ready(function() {
         const stickyHeader = $('.sticky-header');

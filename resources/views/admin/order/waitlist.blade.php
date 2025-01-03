@@ -270,7 +270,7 @@
                                         <div class="buttons">
                                             <button class="notify-button" data-order-id="{{ $order->id }}" data-phone="{{ $order->phone }}">Notify</button>
                                             <button class="seat-button" data-order-id="{{ $order->id }}">Seat</button>
-                                            <button class="view-order" data-order-id="{{ $order->id }}">View</button>
+                                            <button class="btn btn-info view-order-details" data-order-id="{{ $order->id }}"> View </button>
                                         </div>
                                         <p><small>{{ $order->created_at->format('M d, Y h:i A') }}</small></p>
                                     </div>
@@ -290,7 +290,7 @@
                                     <p><strong>Seated: </strong>Table {{ $order->table->name }}</p>
                                     <div class="buttons">
                                         <button class="notify-button" data-order-id="{{ $order->id }}">Notify</button>
-                                        <button class="view-order" data-order-id="{{ $order->id }}">View</button>
+                                        <button class="btn btn-info view-order-details" data-order-id="{{ $order->id }}">View</button>
                                         <button class="complete-order-button" data-order-id="{{ $order->id }}" data-table-id="{{ $order->table->id }}">Complete</button>
                                     </div>
                                     <p><small>{{ $order->updated_at->format('M d, Y h:i A') }}</small></p>
@@ -310,7 +310,7 @@
                                         <p><strong>People:</strong> {{ $order->userInfo ? $order->userInfo->numberOfCustomers : 'No customer count' }}</p>
                                         <div class="buttons">
                                             <button class="notify-button" data-order-id="{{ $order->id }}">Notify</button>
-                                            <button class="view-order" data-order-id="{{ $order->id }}">View</button>
+                                            <button class="btn btn-info view-order-details" data-order-id="{{ $order->id }}">View</button>
                                         </div>
                                         <p><small>{{ $order->updated_at->format('M d, Y h:i A') }}</small></p>
                                     </div>
@@ -346,6 +346,30 @@
         </div>
     </div>
     <!-- /Page Wrapper -->
+
+    <!-- Order Details Modal -->
+    <div class="modal fade" id="orderDetailsModal" tabindex="-1" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="orderDetailsModalLabel">Order Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- 动态内容将在这里加载 -->
+                    <div id="orderDetailsContent">
+                        Loading...
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -397,17 +421,18 @@
                 waitingTimeInSeconds = Math.max(waitingTimeInSeconds, 0);
 
                 // 将秒转换为分钟和秒
-                var minutes = Math.floor(waitingTimeInSeconds / 60);
+                var hours = Math.floor(waitingTimeInSeconds / 3600);
+                var minutes = Math.floor((waitingTimeInSeconds % 3600) / 60);
                 var seconds = waitingTimeInSeconds % 60;
 
                 // 更新等待时间
                 var waitingTimeElement = item.querySelector('.waiting-time');
                 if (waitingTimeElement) {
-                    waitingTimeElement.textContent = `${minutes} mins ${seconds} seconds`;
+                    waitingTimeElement.textContent = `${hours} hrs ${minutes} mins ${seconds} secs`;
                 }
 
                 // 调试信息
-                console.log('Order ID:', item.getAttribute('data-order-id'), 'Waiting time:', `${minutes} mins ${seconds} seconds`);
+                console.log('Order ID:', item.getAttribute('data-order-id'), 'Waiting time:', `${hours} hrs ${minutes} mins ${seconds} secs`);
             });
         }, 1000); // 每秒更新一次
 
@@ -471,6 +496,7 @@
                         $('div[data-order-id="' + orderId + '"]').remove();
 
                         alert('Order completed successfully!');
+                        location.reload(); // 刷新页面以更新界面
                     } else {
                         alert('Error completing order!');
                     }
@@ -527,15 +553,34 @@
             });
         });
 
-
-        
-
-
-
-
-
-
     });
+
+     //view order
+    document.addEventListener('DOMContentLoaded', function () {
+        // 为每个 "View" 按钮绑定点击事件
+        document.querySelectorAll('.view-order-details').forEach(button => {
+            button.addEventListener('click', function () {
+                const orderId = this.getAttribute('data-order-id');
+              
+                
+                // 显示模态框
+                const modal = new bootstrap.Modal(document.getElementById('orderDetailsModal'));
+                modal.show();
+
+                // 加载订单详情
+                fetch(`/order/details/${orderId}`)
+                    .then(response => response.text())
+                    .then(html => {
+                        document.getElementById('orderDetailsContent').innerHTML = html;
+                    })
+                    .catch(error => {
+                        document.getElementById('orderDetailsContent').innerHTML = '<p>Error loading order details.</p>';
+                        console.error(error);
+                    });
+            });
+        });
+    });
+
 
 </script>
 

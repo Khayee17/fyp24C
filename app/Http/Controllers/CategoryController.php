@@ -177,11 +177,12 @@ class CategoryController extends Controller
         $categories = Category::with('products.variants')->get(); // 确保加载关联数据
 
         $products = Product::all();
-
         
-
         // 将数据传递给视图
         return view('layout', compact('categories', 'products'));
    }
+
+   
+
     
 }

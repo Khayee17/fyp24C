@@ -348,6 +348,10 @@
             success: function(response) {
                 alert('Order saved successfully! Order ID: ' + response.order_id);
                 localStorage.removeItem('cart');
+
+                $('#order-id').text('Order Id: No. ' + response.order_id);
+                $('#queue-number').text(response.order_id);
+                $('#order-created-at').text(response.created_at);
             },
             error: function(error) {
                 alert('Failed to save order. Please try again.');

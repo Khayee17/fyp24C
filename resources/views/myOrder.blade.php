@@ -35,8 +35,8 @@
                         <p><strong><span id="orderCustomerCount"> </span></strong></p>
                     </div>
                     <div class="info">
-                        <p>Queue Number</p>
-                        <p><strong id="queue-number">P025</strong></p>
+                        <p>Order Id</p>
+                        <p><strong id="queue-number"> </strong></p>
                     </div>
                 </div>
             </div>
@@ -45,11 +45,6 @@
         <div class="my-order-details">
             <div class="order-list-header">
                 <h2>Order Details</h2>
-                <div class="my-order-info">
-                    <span><i class="far fa-clock"></i> Pre-Order</span>
-                    <span><i class="fas fa-user"></i> <span id="orderCustomerCount"> </span> pax</span>
-                    <i class="fas fa-chevron-right"></i>
-                </div>
             </div>
             <div class="order-meta">
                 <span id="order-id">Order Id: No. </span>

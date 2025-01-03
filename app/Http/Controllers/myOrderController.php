@@ -213,6 +213,7 @@ public function showWaitlist()
 }
 
 
+
 public function sendMessage(Request $request)
 {
     $request->validate([
@@ -255,6 +256,78 @@ public function sendMessage(Request $request)
             'message' => '发送失败：' . $e->getMessage(),
         ], 500);
     }
+}
+
+public function show($id)
+{
+    $order = MyOrder::findOrFail($id);
+    $order->items = json_decode($order->items, true); // 解码JSON数据
+    return view('admin.order.myOrderDetails', compact('order'));
+}
+
+public function getEstimatedWaitingTime()
+{
+    // 获取餐厅的总桌位数
+    $totalTables = Table::count(); 
+
+    // 获取已就座顾客数量（seated状态）
+    $seatedOrders = MyOrder::where('status', 'seated')->count(); 
+
+    // 获取排队顾客数量（pending状态）
+    $pendingOrders = MyOrder::where('status', 'pending')->count(); 
+
+    // 场景 4: 餐厅未满座，pending 无订单
+    if ($seatedOrders < $totalTables && $pendingOrders == 0) {
+        return response()->json([
+            'estimated_waiting_time' => 0,
+            'groups_ahead' => 0
+        ]);
+    }
+
+    // 场景 3: 餐厅未满座，pending 有订单
+    if ($seatedOrders < $totalTables && $pendingOrders > 0) {
+        $averageDiningTime = 30; // 假设每组顾客用餐时间为30分钟
+        $estimatedWaitTime = $pendingOrders * $averageDiningTime;
+        return response()->json([
+            'estimated_waiting_time' => $estimatedWaitTime,
+            'groups_ahead' => $pendingOrders
+        ]);
+    }
+
+    // 场景 2: 餐厅满座，pending 有订单
+    if ($seatedOrders >= $totalTables && $pendingOrders > 0) {
+        $averageDiningTime = 30; // 假设每组顾客用餐时间为30分钟
+        $estimatedWaitTime = $pendingOrders * $averageDiningTime;
+        return response()->json([
+            'estimated_waiting_time' => $estimatedWaitTime,
+            'groups_ahead' => $pendingOrders
+        ]);
+    }
+
+    // 场景 1: 餐厅满座，pending 无订单
+    if ($seatedOrders >= $totalTables && $pendingOrders == 0) {
+        // 获取最早的“seated”订单
+        $seatedOrder = MyOrder::where('status', 'seated')
+            ->orderBy('updated_at', 'asc')
+            ->first(); 
+
+        if ($seatedOrder) {
+            $averageDiningTime = 30; // 假设每组顾客用餐时间为30分钟
+            $releaseTime = \Carbon\Carbon::parse($seatedOrder->updated_at)->addMinutes($averageDiningTime);
+            $currentTime = \Carbon\Carbon::now();
+            $estimatedWaitTime = $releaseTime->diffInMinutes($currentTime); // 返回分钟数
+            return response()->json([
+                'estimated_waiting_time' => $estimatedWaitTime,
+                'groups_ahead' => 0
+            ]);
+        }
+    }
+
+    // 默认返回空数据（理论上不应该到这里）
+    return response()->json([
+        'estimated_waiting_time' => 0,
+        'groups_ahead' => 0
+    ]);
 }
 
 

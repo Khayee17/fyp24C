@@ -142,17 +142,17 @@ Route::post('/submit-order', [myOrderController::class, 'store'])->name('order.s
 Route::get('/my-order/{orderId}', [myOrderController::class, 'show'])->name('myOrder.show');
 
 
-Route::get('/waitlist', [myOrderController::class, 'showWaitlist']);
+//admin waitlist
+Route::get('/waitlist', [myOrderController::class, 'showWaitlist'])->name('showWaitlist');
 
 Route::post('/assignTable/{orderId}', [myOrderController::class, 'assignTable'])->name('assignTable');
-
-Route::get('/order/{id}', [myOrderController::class, 'showOrderDetails']);
 
 Route::post('/admin/order/complete/{orderId}', [myOrderController::class, 'completeOrder']);
 
 Route::post('/notify', [App\Http\Controllers\myOrderController::class, 'sendMessage']);
 
-Route::get('/calculate-estimated-wait-time', [myOrderController::class, 'calculateEstimatedWaitTime']);
+Route::get('/api/estimated-wait-time', [myOrderController::class, 'getEstimatedWaitingTime']);
+
 
 
 //admin table
@@ -161,10 +161,18 @@ Route::post('/tables', [TableController::class, 'store'])->name('tables.store');
 Route::put('/tables/{table}', [TableController::class, 'update'])->name('tables.update'); // 更新桌位
 Route::delete('/tables/{table}', [TableController::class, 'destroy'])->name('tables.destroy'); // 删除桌位
 // routes/web.php
-Route::get('waitlist/updateTablePrice', [MyOrderController::class, 'updateTablePrice'])->name('updateTablePrice');
 
 
 
+//show order detail clicking view button
+// Route::get('/order/{id}', [myOrderController::class, 'show'])->name('order.show');
+
+Route::get('/order/details/{orderId}', [myOrderController::class, 'show'])->name('order.details');
+
+// Route::get('/order/details/{id}', function ($id) {
+//     $order = \App\Models\Order::with('items')->findOrFail($id); // 假设订单模型是 Order
+//     return view('myOrderDetails', ['order' => $order]);
+// });
 
 
 
