@@ -12,18 +12,16 @@
             <h2>My Order</h2>
         </div>
 
-        <!-- <div class="restaurant-name">MEO WESTERN CAFE</div> -->
         <div class="queue-alert">Show your queue ticket when your turn</div>
 
         <div class="ticket">
             <div class="ticket-left">
                 <h2>Wait</h2>
-                <div class="wait-number">5</div>
+                <div class="wait-number" id="wait-number">5</div>
             </div>
             <div class="ticket-divider"></div>
             <div class="ticket-right">
                 <div class="cafe-info">
-                    <!-- <img src="https://via.placeholder.com/60" alt="Cafe Logo" class="cafe-logo"> -->
                     <div class="cafe-details">
                         <p>The Toast 土司坊</p>
                         <p>📍 Tun Aminah</p>
@@ -51,7 +49,9 @@
                 <span id="order-created-at"> </span>
             </div>
             
-            <div class="my-order-items" id="orderItems"></div>
+            <div class="my-order-items" id="orderItems">
+                
+            </div>
             
             <div class="order-summary">
                 <div class="summary-item">

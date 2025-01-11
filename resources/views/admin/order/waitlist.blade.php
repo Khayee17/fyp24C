@@ -185,7 +185,7 @@
         padding: 0 15px; 
     }
 
-    .table-item .view-order-button,
+    .table-item #view-order-button,
     .table-item .complete-order-button {
         display: none; /* 初始时隐藏按钮 */
         background-color: #007bff; /* 蓝色背景 */
@@ -203,11 +203,11 @@
         margin: 5px 0; /* 上下间距 */
     }
 
-    .table-item:hover .view-order-button,
+    .table-item:hover #view-order-button,
     .table-item:hover .complete-order-button {
         display: block; /* 悬停时显示按钮为块级元素 */
     }
-    .table-item:hover .view-order-button {
+    .table-item:hover #view-order-button {
         bottom: 40px; /* 调整 View 按钮的位置 */
     }
 
@@ -220,7 +220,7 @@
         opacity: 0; 
     }
 
-    .view-order-button:hover,
+    #view-order-button:hover,
     .complete-order-button:hover {
         background-color: #0056b3;
     }
@@ -259,11 +259,13 @@
                         </div>
 
                        <!-- Waitlist Content -->
-                        <div id="waitlist-content" class="tab-content active">
+                       <div id="waitlist-content" class="tab-content active">
                             <div class="scrollable-list">
-                                <!-- List Items -->
+                            @if ($waitlist->isEmpty())
+                                <p>No waiting orders at the moment.</p> 
+                            @else
                                 @foreach ($waitlist as $order)
-                                    <div class="waitlist-item" data-order-id="{{ $order->id }}" data-created-at="{{ strtotime($order->created_at) }}">
+                                <div class="waitlist-item" data-order-id="{{ $order->id }}" data-created-at="{{ strtotime($order->created_at) }}">
                                         <h3>Order ID: {{ $order->id }} - <span class="phone-number">{{ $order->userInfo ? $order->userInfo->phone : 'No phone number' }}</span></h3>
                                         <p><strong>People:</strong> {{ $order->userInfo ? $order->userInfo->numberOfCustomers : 'No customer count' }}</p>
                                         <p><strong>Waiting:</strong><span class="waiting-time">{{ $order->waiting_time }} mins</span></p>
@@ -273,9 +275,10 @@
                                             <button class="btn btn-info view-order-details" data-order-id="{{ $order->id }}"> View </button>
                                         </div>
                                         <p><small>{{ $order->created_at->format('M d, Y h:i A') }}</small></p>
+                                        
                                     </div>
                                 @endforeach
-                                <!-- Add more items as needed -->
+                            @endif
                             </div>
                         </div>
 
@@ -283,41 +286,55 @@
                         <!-- Seated Content -->
                         <div id="seated-content" class="tab-content">
                             <div class="scrollable-list">
-                            @foreach ($seatedOrders as $order)
-                                <div class="waitlist-item" data-order-id="{{ $order->id }}" data-created-at="{{ strtotime($order->created_at) }}">
-                                    <h3>Order ID: {{ $order->id }} - <span class="phone-number">{{ $order->userInfo ? $order->userInfo->phone : 'No phone number' }}</span></h3>
-                                    <p><strong>People:</strong> {{ $order->userInfo ? $order->userInfo->numberOfCustomers : 'No customer count' }}</p>
-                                    <p><strong>Seated: </strong>Table {{ $order->table->name }}</p>
-                                    <div class="buttons">
-                                        <button class="notify-button" data-order-id="{{ $order->id }}">Notify</button>
-                                        <button class="btn btn-info view-order-details" data-order-id="{{ $order->id }}">View</button>
-                                        <button class="complete-order-button" data-order-id="{{ $order->id }}" data-table-id="{{ $order->table->id }}">Complete</button>
+                            @if ($seatedOrders->isEmpty())
+                                <p>No seated orders at the moment.</p>
+                            @else
+                                @foreach ($seatedOrders as $order)
+                                    <div class="waitlist-item" data-order-id="{{ $order->id }}" data-created-at="{{ strtotime($order->created_at) }}">
+                                        <h3>Order ID: {{ $order->id }} - <span class="phone-number">{{ $order->userInfo ? $order->userInfo->phone : 'No phone number' }}</span></h3>
+                                        <p><strong>People:</strong> {{ $order->userInfo ? $order->userInfo->numberOfCustomers : 'No customer count' }}</p>
+                                        <p><strong>Table: </strong>
+                                            @php
+                                                $tableIds = json_decode($order->table_ids, true);
+                                                $tableNames = \App\Models\Table::whereIn('id', $tableIds)->pluck('name')->toArray();
+                                            @endphp
+                                            {{ implode(', ', $tableNames) }}
+                                        </p>
+                                        <div class="buttons">
+                                            <button class="notify-button" data-order-id="{{ $order->id }}">Notify</button>
+                                            <button class="btn btn-info view-order-details" data-order-id="{{ $order->id }}"> View </button>
+                                            <button class="complete-order-button" 
+                                                data-order-id="{{ $order->id }}" 
+                                                data-table-id="{{ implode(',', json_decode($order->table_ids, true)) }}">
+                                                Complete
+                                            </button>
+                                        </div>
+                                        <p><small>{{ $order->updated_at->format('M d, Y h:i A') }}</small></p>
                                     </div>
-                                    <p><small>{{ $order->updated_at->format('M d, Y h:i A') }}</small></p>
-                                </div>
-                            @endforeach
-                                
+                                @endforeach
+                            @endif
                             </div>
                         </div>
 
                         <!-- History Content -->
                         <div id="history-content" class="tab-content">
                             <div class="scrollable-list">
-                                <!-- List Items -->
+                            @if ($historyOrders->isEmpty())
+                                <p>No history orders at the moment.</p> 
+                            @else
                                 @foreach ($historyOrders as $order)
                                     <div class="waitlist-item" data-order-id="{{ $order->id }}" data-created-at="{{ strtotime($order->updated_at) }}">
                                         <h3>Order ID: {{ $order->id }} - <span class="phone-number">{{ $order->userInfo ? $order->userInfo->phone : 'No phone number' }}</span></h3>
                                         <p><strong>People:</strong> {{ $order->userInfo ? $order->userInfo->numberOfCustomers : 'No customer count' }}</p>
                                         <div class="buttons">
-                                            <button class="notify-button" data-order-id="{{ $order->id }}">Notify</button>
                                             <button class="btn btn-info view-order-details" data-order-id="{{ $order->id }}">View</button>
                                         </div>
                                         <p><small>{{ $order->updated_at->format('M d, Y h:i A') }}</small></p>
                                     </div>
                                 @endforeach
+                            @endif
                             </div>
                         </div>
-
                     </div>
                 </div>
 
@@ -327,19 +344,26 @@
                         <h2 class="table-title">Table Layout</h2>
                         <div class="table-container">
                             @foreach ($tables as $table)
-                            <div class="table-item" data-table-id="{{ $table->id }}" data-capacity="{{ $table->capacity }}" data-status="{{ $table->status }}" >
-                                <div class="table-label @if($table->status == 'available') available @else occupied @endif">Table {{ $table->name }} </br> ({{ $table->capacity }} pax)</div>
-                                
-                                <div class="table-status">{{ $table->status == 'available' ? 'Available' : 'Occupied' }}</div>
+                                <div class="table-item" data-table-id="{{ $table->id }}" data-capacity="{{ $table->capacity }}" data-status="{{ $table->status }}" >
+                                    <div class="table-label @if($table->status == 'available') available @else occupied @endif">Table {{ $table->name }} </br> ({{ $table->capacity }} pax)</div>
+                                    <div class="table-status">{{ $table->status == 'available' ? 'Available' : 'Occupied' }}</div>
 
-                                @if ($table->status == 'occupied')
-                                    <button class="view-order-button" data-table-id="{{ $table->id }}">View</button>
-                                    <button class="complete-order-button" data-table-id="{{ $table->id }}">Complete</button>
-                                @endif
-                            </div>
+                                    @if ($table->status == 'occupied')
+                                        @php
+                                            $order = \App\Models\MyOrder::where('table_ids', 'LIKE', '%' . $table->id . '%')->first();
+                                        @endphp
+                                        @if ($order)
+                                            <button class="btn btn-info view-order-details" id="view-order-button" data-order-id="{{ $order->id }}"> View </button>
+                                            <!-- <button class="complete-order-button" 
+                                                data-order-id="{{ $order->id }}" 
+                                                data-table-id="{{ $table->id }}">
+                                                Complete
+                                            </button> -->
+                                        @endif
+                                    @endif
+                                </div>
                             @endforeach
                         </div>
-
                     </div>
                 </div>
             </div>
@@ -348,25 +372,25 @@
     <!-- /Page Wrapper -->
 
     <!-- Order Details Modal -->
-    <div class="modal fade" id="orderDetailsModal" tabindex="-1" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
+    <div class="modal fade" id="orderDetailsModal" tabindex="-1" role="dialog" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="orderDetailsModalLabel">Order Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
-                <div class="modal-body">
-                    <!-- 动态内容将在这里加载 -->
-                    <div id="orderDetailsContent">
-                        Loading...
-                    </div>
+                <div class="modal-body" id="orderDetailsContent">
+                    <!-- AJAX 内容会动态加载到这里 -->
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
     </div>
+
 
 
 
@@ -397,29 +421,23 @@
         }
 
         
-       
-    
         setInterval(function() {
             // 获取所有待处理的订单项
             document.querySelectorAll('.waitlist-item').forEach(function (item) {
                 // 获取订单的创建时间
                 var createdAt = parseInt(item.getAttribute('data-created-at'));
 
-                // 确保 createdAt 是一个有效的数字
                 if (isNaN(createdAt)) {
                     console.error('Invalid timestamp for order ID:', item.getAttribute('data-order-id'));
-                    return; // 如果时间戳无效，跳过此项
+                    return; 
                 }
 
                 // 获取当前时间戳（秒）
                 var currentTime = Math.floor(Date.now() / 1000);
-
                 // 计算时间差（秒）
                 var waitingTimeInSeconds = currentTime - createdAt;
-
                 // 确保等待时间不小于0
                 waitingTimeInSeconds = Math.max(waitingTimeInSeconds, 0);
-
                 // 将秒转换为分钟和秒
                 var hours = Math.floor(waitingTimeInSeconds / 3600);
                 var minutes = Math.floor((waitingTimeInSeconds % 3600) / 60);
@@ -431,7 +449,6 @@
                     waitingTimeElement.textContent = `${hours} hrs ${minutes} mins ${seconds} secs`;
                 }
 
-                // 调试信息
                 console.log('Order ID:', item.getAttribute('data-order-id'), 'Waiting time:', `${hours} hrs ${minutes} mins ${seconds} secs`);
             });
         }, 1000); // 每秒更新一次
@@ -439,7 +456,6 @@
 
         //assign table
         const seatButtons = document.querySelectorAll('.seat-button');
-
         seatButtons.forEach(button => {
             button.addEventListener('click', function () {
                 const orderId = this.dataset.orderId;
@@ -455,23 +471,52 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        alert('Order assigned to a table successfully!');
-                        location.reload(); // 刷新页面以更新界面
+                        // 动态生成提示信息
+                        let tableNames = data.assignedTables.map(table => table.name);
+                        let tablesMessage = tableNames.join(' and ');
+                        let successMessage = `Order assigned to table ${tablesMessage} successfully!`;
+
+                        alert(successMessage);
+                        location.reload(); 
+
+                        // 拼凑桌位信息
+                        let assignedTablesHtml = '';
+                        data.assignedTables.forEach(table => {
+                            assignedTablesHtml += `
+                                <div class="assigned-table">
+                                    Table ${table.name} (${table.capacity} pax)
+                                </div>
+                            `;
+                        });
+
+                        const orderElement = document.querySelector(`.waitlist-item[data-order-id="${orderId}"]`);
+                        const assignedTablesContainer = orderElement.querySelector('.assigned-tables');
+                        assignedTablesContainer.innerHTML = assignedTablesHtml;
+
+                        data.assignedTables.forEach(table => {
+                            const tableElement = document.querySelector(`.table-item[data-table-id="${table.id}"]`);
+                            tableElement.querySelector('.table-status').textContent = 'Occupied';
+                        });
+
                     } else {
-                        alert(data.error || 'An error occurred while assigning the table.');
+                        alert(data.error || 'An error occurred while assigning the tables.');
                     }
                 })
                 .catch(error => console.error('Error:', error));
             });
         });
 
+
+
         // 完成订单按钮的点击事件
         $('.complete-order-button').on('click', function() {
-            var tableId = $(this).data('table-id');
+            var orderId = $(this).data('order-id');
+            var tableId = $(this).data('table-id');  // 获取tableId
 
-            // 获取当前桌位上已经就座的订单
-            var orderId = getSeatedOrderIdForTable(tableId);
-            if (!orderId) {
+            console.log('orderId:', orderId);  // 打印调试
+            console.log('tableId:', tableId);  // 打印调试
+
+            if (!orderId || !tableId) {
                 alert('No order seated at this table!');
                 return;
             }
@@ -511,8 +556,8 @@
         // 辅助函数：根据 tableId 获取对应的 seated 订单 ID
         function getSeatedOrderIdForTable(tableId) {
             // 通过 tableId 获取该桌位上已经就座的订单 ID
-            var order = @json($seatedOrders); // 获取 seated 订单的列表
-            var seatedOrder = order.find(o => o.table_id == tableId);
+            var seatedOrder = order.find(o => JSON.parse(o.table_ids).includes(tableId));
+
             return seatedOrder ? seatedOrder.id : null;
         }
 
@@ -522,6 +567,8 @@
                 const orderId = this.getAttribute('data-order-id');
                 let phone = this.closest('.waitlist-item').querySelector('.phone-number').textContent.trim();
 
+                console.log('Phone before format:', phone);
+
                 // 验证并修复电话号码格式
                 if (phone.startsWith('0')) {
                     phone = '+60' + phone.substring(1);
@@ -530,12 +577,15 @@
                     return;
                 }
 
+                console.log('Phone after format:', phone); 
+
                 fetch('/notify', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                     },
+                    
                     body: JSON.stringify({
                         phone: phone,
                         message: `Your table is ready! Please proceed to the restaurant. Order ID: ${orderId}`,
@@ -550,36 +600,39 @@
                         }
                     })
                     .catch(error => console.error('错误:', error));
+                    
             });
         });
 
     });
 
-     //view order
-    document.addEventListener('DOMContentLoaded', function () {
-        // 为每个 "View" 按钮绑定点击事件
-        document.querySelectorAll('.view-order-details').forEach(button => {
-            button.addEventListener('click', function () {
-                const orderId = this.getAttribute('data-order-id');
-              
-                
-                // 显示模态框
-                const modal = new bootstrap.Modal(document.getElementById('orderDetailsModal'));
-                modal.show();
+    //admin view order details
+    document.querySelectorAll('.view-order-details').forEach(button => {
+        button.addEventListener('click', function () {
+            const orderId = this.getAttribute('data-order-id');
 
-                // 加载订单详情
-                fetch(`/order/details/${orderId}`)
-                    .then(response => response.text())
-                    .then(html => {
-                        document.getElementById('orderDetailsContent').innerHTML = html;
-                    })
-                    .catch(error => {
-                        document.getElementById('orderDetailsContent').innerHTML = '<p>Error loading order details.</p>';
-                        console.error(error);
-                    });
-            });
+            // 显示模态框
+            const modal = new bootstrap.Modal(document.getElementById('orderDetailsModal'));
+            modal.show();
+
+            // 加载订单详情
+            fetch(`/order/details/${orderId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.text();
+                })
+                .then(html => {
+                    document.getElementById('orderDetailsContent').innerHTML = html;
+                })
+                .catch(error => {
+                    document.getElementById('orderDetailsContent').innerHTML = '<p>Error loading order details.</p>';
+                    console.error('Error:', error);
+                });
         });
     });
+
 
 
 </script>

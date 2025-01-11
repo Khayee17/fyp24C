@@ -42,10 +42,7 @@
                 </div>
                 <div class="col-auto float-right ml-auto">
                     <a href="#" class="btn add-btn" data-toggle="modal" data-target="#add_product"><i class="fa fa-plus"></i> Add Product</a>
-                    <div class="view-icons">
-                        <a href="clients.html" class="grid-view btn btn-link"><i class="fa fa-th"></i></a>
-                        <a href="clients-list.html" class="list-view btn btn-link active"><i class="fa fa-bars"></i></a>
-                    </div>
+                    
                 </div>
             </div>
         </div>
@@ -83,7 +80,7 @@
         <div class="row">
             <div class="col-md-12">
                 <div class="table-responsive">
-                    <table class="table table-striped custom-table datatable">
+                    <table class="table table-striped custom-table">
                         <thead>
                             <tr>
                                 <th><input type="checkbox" id="select-all-products"></th>
@@ -132,6 +129,7 @@
                                             <a href="#" class="action-icon dropdown-toggle" data-toggle="dropdown" aria-expanded="false"><i class="material-icons">more_vert</i></a>
                                             <div class="dropdown-menu dropdown-menu-right">
                                                 <a class="dropdown-item" href="#" data-toggle="modal" data-target="#edit_product_{{ $product->id }}"><i class="fa fa-pencil m-r-5"></i> Edit</a>
+
                                                 <a class="dropdown-item" href="#" data-toggle="modal" data-target="#delete_product_{{ $product->id }}"><i class="fa fa-trash-o m-r-5"></i> Delete</a>
                                             </div>
                                         </div>
@@ -151,8 +149,22 @@
         </div>
     </div>
 
-    <div id="paginationInfo"></div>
-    <!-- /Page Content -->
+     <!-- Display number of entries -->
+    <div class="d-flex justify-content-between">
+        <span>Showing {{ $products->firstItem() }} to {{ $products->lastItem() }} of {{ $products->total() }} entries</span>
+    </div>
+
+
+    <!-- Custom Pagination -->
+    <div id="pagination" class="d-flex justify-content-between">
+        <a href="{{ $products->previousPageUrl() }}" class="btn btn-light" {{ $products->onFirstPage() ? 'disabled' : '' }}>Previous</a>
+
+        <span>Page {{ $products->currentPage() }} of {{ $products->lastPage() }}</span>
+
+        <a href="{{ $products->nextPageUrl() }}" class="btn btn-light" {{ !$products->hasMorePages() ? 'disabled' : '' }}>Next</a>
+    </div>
+
+
 
     <!-- Image Modal -->
     <div class="modal fade" id="imageModal" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel" aria-hidden="true">
@@ -245,7 +257,7 @@
                                 <div class="form-group">
                                     <label class="col-form-label">Variant (Optional)</label>
                                     <div id="optional-choices-add">
-                                        <!-- 动态添加变体 -->
+                                        
                                     </div>
                                     <button class="btn-s btn-dark add-choice" data-container-id="optional-choices-add" type="button">Add Variant</button>
                                 </div>
@@ -443,33 +455,6 @@
             });
         });
 
-        // document.addEventListener('DOMContentLoaded', function() {
-        //     document.querySelectorAll('.add-choice').forEach(function(button) {
-        //         button.addEventListener('click', function() {
-        //             var productId = this.getAttribute('data-product-id');
-        //             var choiceContainer = document.createElement('div');
-        //             choiceContainer.className = 'input-group mb-2';
-        //             choiceContainer.innerHTML = `
-        //                 <input type="text" class="form-control" name="variantName[]" placeholder="Name (eg:Temperature)" required>
-        //                 <input type="text" class="form-control" name="variantOpt[]" placeholder="Option (eg:cold,hot)" required>
-        //                 <input type="text" class="form-control" name="variantPrice[]" placeholder="Price (eg:0.50,0.20)" required>
-        //                 <div class="input-group-append">
-        //                     <button class="btn btn-danger remove-variant" type="button"><i class="fa-solid fa-trash"></i></button>
-        //                 </div>
-        //             `;
-        //             document.getElementById('optional-choices-' + productId).appendChild(choiceContainer);
-        //         });
-        //     });
-
-        //     document.querySelectorAll('.modal').forEach(function(modal) {
-        //         modal.addEventListener('click', function(e) {
-        //             if (e.target && (e.target.classList.contains('remove-variant') || e.target.closest('.remove-variant'))) {
-        //                 e.target.closest('.input-group').remove();
-        //             }
-        //         });
-        //     });
-        // });
-
         function updateStockStatus(productId, inStock) {
             fetch(`/products/${productId}/update-stock`, {
                 method: 'POST',
@@ -498,7 +483,6 @@
 
         //variant
         document.addEventListener('DOMContentLoaded', function () {
-             // 处理所有的添加变体按钮
             document.querySelectorAll('.add-choice').forEach(function(button) {
                 button.addEventListener('click', function() {
                     var containerId = this.getAttribute('data-container-id');
@@ -560,7 +544,7 @@
             });
 
             deleteProductsButton.addEventListener('click', function() {
-                if (selectedIds.length > 0) {
+                if (selectedIds.length > 1) {
                     $('#delete_selected_modal').modal('show');
                 } else {
                     alert('No products selected.');

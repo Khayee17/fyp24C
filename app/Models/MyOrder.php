@@ -17,23 +17,25 @@ class MyOrder extends Model
         'rounding',
         'total',
         'status',
-        'table_id',
+        'table_ids',
     ];
 
     protected $casts = [
         'items' => 'array', // 自动解码JSON数据为数组
+        'table_ids' => 'array', // 将table_ids字段处理为数组
     ];
 
     public function items()
     {
         return $this->hasMany(OrderItem::class, 'order_id', 'id');
     }
-
-    public function table()
-    {
-        return $this->belongsTo(Table::class, 'table_id');
-    }
     
+    // 获取与订单关联的桌位模型
+    public function tables()
+    {
+        return Table::whereIn('id', $this->table_ids)->get();
+    }
+
     public function userInfo()
     {
         return $this->hasOne(UserInfo::class, 'order_id', 'id');

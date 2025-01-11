@@ -23,11 +23,10 @@ return new class extends Migration
             $table->decimal('rounding', 8, 2)->default(0.00);
             $table->decimal('total', 8, 2)->default(0.00);
             $table->string('status')->default('pending'); // 订单状态（默认是预订单）
-            $table->unsignedBigInteger('table_id')->nullable(); // 关联桌位ID（可空）
+            $table->json('table_ids')->nullable(); // 修改为支持多个桌位ID（json格式）
             $table->unsignedBigInteger('user_info_id')->nullable(); // 添加外键字段，用于与 UserInfo 关联
             $table->timestamps();
 
-            $table->foreign('table_id')->references('id')->on('tables')->onDelete('set null'); // 设置外键约束
             $table->foreign('user_info_id')->references('id')->on('user_infos')->onDelete('set null'); // 设置与 UserInfo 的外键约束
 
         });

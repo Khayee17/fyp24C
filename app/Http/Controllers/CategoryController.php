@@ -17,6 +17,8 @@ class CategoryController extends Controller
         // 获取所有分类
         $categories = Category::all();
         
+        $categories = Category::paginate(10); // 每页显示10条
+        
         // 返回视图并传递所有分类
         return view('admin.menu.category', compact('categories'));
     }
@@ -149,7 +151,9 @@ class CategoryController extends Controller
     public function deleteMultiple(Request $request)
     {
         $ids = $request->input('ids');
-        Category::whereIn('id', $ids)->delete();
+        $deletedCount = Category::whereIn('id', $ids)->delete();
+
+        session()->flash('success', "$deletedCount categories deleted successfully.");
 
         return response()->json(['success' => true]);
     }

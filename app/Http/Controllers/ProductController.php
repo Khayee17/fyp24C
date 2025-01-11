@@ -14,9 +14,12 @@ class ProductController extends Controller
 {
     public function showProduct(Request $request)
     {
-        $products = Product::with('variants')->get();
+        // $products = Product::with('variants')->get();
+        $products = Product::with(['variants', 'category'])->paginate(10);
         $categories = Category::all(); // 获取所有类别
 
+        // $products = Product::paginate(10); 
+        
         return view('admin.menu.product', compact('products', 'categories'));
     }
 
@@ -42,7 +45,6 @@ class ProductController extends Controller
            $productImgPath = $request->file('product_img')->store('products', 'public');
        }
 
-       // 保存新类别
        $product = Product::create([
             'product_name' => $request->product_name,
             'product_id' => $request->product_id,
@@ -53,10 +55,9 @@ class ProductController extends Controller
             'in_stock' => $request->in_stock,
         ]);
 
-        // 保存变体
         if ($request->has('variantName')) {
             foreach ($request->variantName as $index => $name) {
-                if ($name) { // 确保变体名称有效
+                if ($name) { 
                     Variant::create([
                         'product_id' => $product->id,
                         'variantName' => $name,
@@ -161,11 +162,13 @@ class ProductController extends Controller
         return redirect()->route('productsShow')->with('success', 'Product "' . $product->product_name . '" deleted successfully.');
     }
 
-    // ProductController.php
     public function deleteMultiple(Request $request)
     {
         $ids = $request->input('ids');
-        Product::whereIn('id', $ids)->delete();
+        
+        $deletedCount = Product::whereIn('id', $ids)->delete();
+
+        session()->flash('success', "$deletedCount products deleted successfully.");
 
         return response()->json(['success' => true]);
     }

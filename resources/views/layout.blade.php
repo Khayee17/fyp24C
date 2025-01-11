@@ -40,8 +40,8 @@
     <!-- sticker header -->
     <div class="sticky-header">
       <div class="estimated-time">
-        <span class="highlight">Estimated waiting time: 15-20 minutes</span>
-        <span class="highlight">3 groups ahead</span>
+        <span class="highlight" id="estimated-time-sticky">Estimated waiting time: Loading...</span>
+        <span class="highlight" id="groups-ahead-sticky">0 groups ahead</span>
       </div>
       <div class="restaurant-name">
         <button class="back-btn">
@@ -67,7 +67,7 @@
           <div class="estimated-time">
             <span class="highlight" id="estimated-time">Estimated waiting time: Loading...</span>
             <span class="highlight" id="groups-ahead">0 groups ahead</span>
-        </div>
+          </div>
         </div>
       </div>
 
@@ -184,7 +184,7 @@
 
           <div class="remark-section">
             <h3>Remark (Optional)</h3>
-            <textarea placeholder="Enter remark here"></textarea>
+            <textarea id="remark-text" placeholder="Enter remark here"></textarea>
           </div>
         </div>
 
@@ -234,13 +234,23 @@
                     estimatedTimeText = "No wait, please come in!";
                 }
 
+                //sticker header
+                document.getElementById('estimated-time-sticky').innerText = estimatedTimeText;
+                document.getElementById('groups-ahead-sticky').innerText = groupsAheadText;
+                //normal header
                 document.getElementById('estimated-time').innerText = estimatedTimeText;
                 document.getElementById('groups-ahead').innerText = groupsAheadText;
+
+                //myorder ticket
+                document.getElementById('wait-number').innerText = data.groups_ahead;
             })
             .catch(error => {
                 console.error('Error fetching estimated wait time:', error);
+                document.getElementById('estimated-time-sticky').innerText = "Error loading data";
+                document.getElementById('groups-ahead-sticky').innerText = "Error loading data";
                 document.getElementById('estimated-time').innerText = "Error loading data";
                 document.getElementById('groups-ahead').innerText = "Error loading data";
+                document.getElementById('wait-number').innerText = "Error";
             });
       }
 

@@ -77,7 +77,7 @@
     <div class="row">
             <div class="col-md-12">
                 <div class="table-responsive">
-                    <table class="table table-striped custom-table datatable">
+                    <table class="table table-striped custom-table">
                         <thead>
                             <tr>
                                 <th><input type="checkbox" id="select-all-categories"></th>
@@ -132,6 +132,20 @@
         </div>
     </div>
     <!-- /Page Content -->
+
+    <!-- Display number of entries -->
+    <div class="d-flex justify-content-between">
+        <span>Showing {{ $categories->firstItem() }} to {{ $categories->lastItem() }} of {{ $categories->total() }} entries</span>
+    </div>
+
+    <!-- Custom Pagination -->
+    <div id="pagination" class="d-flex justify-content-between">
+        <a href="{{ $categories->previousPageUrl() }}" class="btn btn-light" {{ $categories->onFirstPage() ? 'disabled' : '' }}>Previous</a>
+
+        <span>Page {{ $categories->currentPage() }} of {{ $categories->lastPage() }}</span>
+
+        <a href="{{ $categories->nextPageUrl() }}" class="btn btn-light" {{ !$categories->hasMorePages() ? 'disabled' : '' }}>Next</a>
+    </div>
 
     <!-- image pop up modal -->
         <div class="modal fade" id="imageModal" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel" aria-hidden="true">

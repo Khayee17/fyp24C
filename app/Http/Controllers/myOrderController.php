@@ -110,8 +110,6 @@ class myOrderController extends Controller
 }
 
 
-// decode json dataType的方法 然后就可以read items里面的东西
-
 public function showOrder($orderId)
 {
     // Retrieve the order from the database
@@ -132,59 +130,92 @@ public function showOrder($orderId)
     }
 }
 
- // 处理订单分配桌位
- public function assignTable($orderId)
- {
-     $order = MyOrder::find($orderId);
-     if (!$order || $order->status != 'pending') {
-         return response()->json(['error' => 'Order not found or already seated'], 400);
-     }
- 
-     // 获取订单的顾客数量
-     $customerCount = $order->userInfo ? $order->userInfo->numberOfCustomers : 0;
-     if ($customerCount <= 0) {
-         return response()->json(['error' => 'Invalid customer count'], 400);
-     }
- 
-     // 查找一个可用的桌位，且其容量足够容纳当前订单
-     $table = Table::where('status', 'available')
-         ->where('capacity', '>=', $customerCount)
-         ->first();
- 
-     if ($table) {
-         // 分配桌位并更新状态
-         $order->table_id = $table->id;
-         $order->status = 'seated';
-         $order->save();
- 
-         // 更新桌位状态
-         $table->status = 'occupied';
-         $table->save();
- 
-         return response()->json(['success' => true, 'order' => $order, 'table' => $table]);
-     } else {
-         return response()->json(['error' => 'No suitable table available'], 400);
-     }
- }
- 
+public function assignTable($orderId)
+{
+    $order = MyOrder::find($orderId);
+    
+    if (!$order || $order->status != 'pending') {
+        return response()->json(['error' => 'Order not found or already seated'], 400);
+    }
 
- public function completeOrder($orderId)
+    // 获取订单的顾客数量
+    $customerCount = $order->userInfo ? $order->userInfo->numberOfCustomers : 0;
+    if ($customerCount <= 0) {
+        return response()->json(['error' => 'Invalid customer count'], 400);
+    }
+
+    // 查找可用的桌位，按容量排序
+    $availableTables = Table::where('status', 'available')
+                             ->where('capacity', '>=', 1)  // 保证桌位有足够容量
+                             ->orderBy('capacity', 'asc')
+                             ->get();
+
+     // 尝试寻找单个桌位是否能够满足顾客数量
+    $assignedTables = [];
+    $totalCapacity = 0;
+
+    foreach ($availableTables as $table) {
+         // 如果当前桌位容量刚好等于顾客数量，则分配该桌位
+        if ($totalCapacity + $table->capacity == $customerCount) {
+            $assignedTables[] = $table;
+            $totalCapacity += $table->capacity;
+            break; 
+        }
+     }
+
+    // 如果没有刚好适合的桌位，继续按容量递增的顺序进行分配
+    if ($totalCapacity < $customerCount) {
+        foreach ($availableTables as $table) {
+            if ($totalCapacity >= $customerCount) break;  
+
+            $assignedTables[] = $table;
+            $totalCapacity += $table->capacity;
+        }
+    }
+
+    // 检查是否有足够的桌位
+    if ($totalCapacity < $customerCount) {
+        return response()->json(['error' => 'No suitable tables available'], 400);
+    }
+
+    // 更新订单状态和分配的桌位，存储多个桌位ID
+    $tableIds = collect($assignedTables)->pluck('id')->toArray(); // 使用 collect 将数组转为集合
+    $order->table_ids = json_encode($tableIds); // 将多个桌位ID存储为JSON格式
+    $order->status = 'seated';
+    $order->save();
+
+    // 更新桌位状态
+    foreach ($assignedTables as $table) {
+        $table->status = 'occupied';
+        $table->save();
+    }
+
+    return response()->json(['success' => true, 'order' => $order, 'assignedTables' => $assignedTables]);
+}
+
+
+
+
+ public function completeOrder(Request $request, $orderId)
 {
     $order = MyOrder::find($orderId);
     if (!$order || $order->status != 'seated') {
         return response()->json(['error' => 'Order not found or not seated'], 400);
     }
 
-    // 更新订单为历史状态
+    $tableIds = json_decode($order->table_ids, true);
+    if (is_array($tableIds)) {
+        foreach ($tableIds as $tableId) {
+            $table = Table::find($tableId);
+            if ($table) {
+                $table->status = 'available';
+                $table->save();
+            }
+        }
+    }
+
     $order->status = 'history';
     $order->save();
-
-    // 释放桌位
-    $table = Table::find($order->table_id);
-    if ($table) {
-        $table->status = 'available';
-        $table->save();
-    }
 
     return response()->json(['success' => true, 'order' => $order]);
 }
@@ -194,20 +225,25 @@ public function showWaitlist()
 {
     $waitlist = MyOrder::with('userInfo')
         ->where('status', 'pending')
-        ->orderBy('created_at', 'desc') // 按创建时间降序排列
-        ->get(); // 获取待分配的订单
+        ->orderBy('created_at', 'desc') 
+        ->get(); 
 
     $seatedOrders = MyOrder::with('userInfo')
         ->where('status', 'seated')
-        ->orderBy('created_at', 'desc') // 按创建时间降序排列
-        ->get(); // 获取已分配桌位的订单
+        ->orderBy('updated_at', 'desc')
+        ->get(); 
 
     $historyOrders = MyOrder::with('userInfo')
         ->where('status', 'history')
-        ->orderBy('updated_at', 'desc') // 按创建时间降序排列
-        ->get(); // 获取历史订单
+        ->orderBy('updated_at', 'desc') 
+        ->get(); 
 
-    $tables = Table::all(); // 获取所有桌位信息
+    $tables = Table::all(); 
+
+     foreach ($seatedOrders as $order) {
+        $tableIds = json_decode($order->table_ids, true);
+        $order->tableNames = Table::whereIn('id', $tableIds)->pluck('name')->toArray();
+    }
 
     return view('admin.order.waitlist', compact('waitlist', 'seatedOrders', 'historyOrders', 'tables'));
 }
@@ -229,12 +265,12 @@ public function sendMessage(Request $request)
     } elseif (!str_starts_with($phone, '+')) {
         return response()->json([
             'success' => false,
-            'message' => '电话号码格式无效，请使用国际格式。',
+            'message' => 'Invalid phone number format, please use international format.',
         ], 400);
     }
 
-    $sid = 'ACf67a8e06f8237213ecfefbdd2b7a1981';
-    $token = 'bcd652d306dbac8aa20f4bc35d1026e2';
+    $sid='ACf67a8e06f8237213ecfefbdd2b7a1981';
+    $token='d39ecf05e2b62f3d4e7805d9b53cfd64';
     $twilio = new Client($sid, $token);
 
     try {
@@ -248,12 +284,12 @@ public function sendMessage(Request $request)
 
         return response()->json([
             'success' => true,
-            'message' => 'WhatsApp 消息发送成功！',
+            'message' => 'WhatsApp message sent successfully!',
         ]);
     } catch (\Exception $e) {
         return response()->json([
             'success' => false,
-            'message' => '发送失败：' . $e->getMessage(),
+            'message' => 'Send failed:' . $e->getMessage(),
         ], 500);
     }
 }
@@ -261,22 +297,29 @@ public function sendMessage(Request $request)
 public function show($id)
 {
     $order = MyOrder::findOrFail($id);
-    $order->items = json_decode($order->items, true); // 解码JSON数据
-    return view('admin.order.myOrderDetails', compact('order'));
+    $order->items = json_decode($order->items, true); // 解码 JSON 数据
+    $tableIds = json_decode($order->table_ids, true) ?? []; // 确保 table_ids 存在
+    $tables = Table::whereIn('id', $tableIds)->get();
+
+    Log::debug('Order Items:', $order->items);
+    Log::debug('Table IDs:', $tableIds);
+    
+    // 返回一个只包含订单详情内容的视图
+    return view('admin.order.myOrderDetails', [
+        'order' => $order,
+        'tables' => $tables,
+    ]);
 }
 
 public function getEstimatedWaitingTime()
 {
-    // 获取餐厅的总桌位数
     $totalTables = Table::count(); 
 
-    // 获取已就座顾客数量（seated状态）
     $seatedOrders = MyOrder::where('status', 'seated')->count(); 
 
-    // 获取排队顾客数量（pending状态）
     $pendingOrders = MyOrder::where('status', 'pending')->count(); 
 
-    // 场景 4: 餐厅未满座，pending 无订单
+    // 餐厅未满座，pending 无订单
     if ($seatedOrders < $totalTables && $pendingOrders == 0) {
         return response()->json([
             'estimated_waiting_time' => 0,
@@ -284,9 +327,9 @@ public function getEstimatedWaitingTime()
         ]);
     }
 
-    // 场景 3: 餐厅未满座，pending 有订单
+    // 餐厅未满座，pending 有订单
     if ($seatedOrders < $totalTables && $pendingOrders > 0) {
-        $averageDiningTime = 30; // 假设每组顾客用餐时间为30分钟
+        $averageDiningTime = 60; // 假设每组顾客用餐时间为60分钟
         $estimatedWaitTime = $pendingOrders * $averageDiningTime;
         return response()->json([
             'estimated_waiting_time' => $estimatedWaitTime,
@@ -294,9 +337,9 @@ public function getEstimatedWaitingTime()
         ]);
     }
 
-    // 场景 2: 餐厅满座，pending 有订单
+    // 餐厅满座，pending 有订单
     if ($seatedOrders >= $totalTables && $pendingOrders > 0) {
-        $averageDiningTime = 30; // 假设每组顾客用餐时间为30分钟
+        $averageDiningTime = 60; 
         $estimatedWaitTime = $pendingOrders * $averageDiningTime;
         return response()->json([
             'estimated_waiting_time' => $estimatedWaitTime,
@@ -304,7 +347,7 @@ public function getEstimatedWaitingTime()
         ]);
     }
 
-    // 场景 1: 餐厅满座，pending 无订单
+    // 餐厅满座，pending 无订单
     if ($seatedOrders >= $totalTables && $pendingOrders == 0) {
         // 获取最早的“seated”订单
         $seatedOrder = MyOrder::where('status', 'seated')
@@ -312,10 +355,10 @@ public function getEstimatedWaitingTime()
             ->first(); 
 
         if ($seatedOrder) {
-            $averageDiningTime = 30; // 假设每组顾客用餐时间为30分钟
+            $averageDiningTime = 60; 
             $releaseTime = \Carbon\Carbon::parse($seatedOrder->updated_at)->addMinutes($averageDiningTime);
             $currentTime = \Carbon\Carbon::now();
-            $estimatedWaitTime = $releaseTime->diffInMinutes($currentTime); // 返回分钟数
+            $estimatedWaitTime = $releaseTime->diffInMinutes($currentTime); 
             return response()->json([
                 'estimated_waiting_time' => $estimatedWaitTime,
                 'groups_ahead' => 0
@@ -323,14 +366,55 @@ public function getEstimatedWaitingTime()
         }
     }
 
-    // 默认返回空数据（理论上不应该到这里）
-    return response()->json([
-        'estimated_waiting_time' => 0,
-        'groups_ahead' => 0
-    ]);
 }
 
 
+//order management
+public function index(Request $request)
+    {
+        $query = MyOrder::query();
+
+        // 按日期过滤
+        if ($request->has('start_date') && $request->has('end_date')) {
+            $startDate = Carbon::parse($request->input('start_date'))->startOfDay();
+            $endDate = Carbon::parse($request->input('end_date'))->endOfDay();
+            $query->whereBetween('created_at', [$startDate, $endDate]);
+        }
+
+        $orders = $query->latest()->paginate(10); // 分页显示订单
+
+        foreach ($orders as $order) {
+            $order->items = json_decode($order->items, true); // 确保 items 是数组
+        }
+        
+        return view('admin.order.orderlist', [
+            'orders' => $orders,
+        ]);
+    }
+
+// 单个订单删除
+public function deleteOrder($orderId)
+{
+    $order = MyOrder::find($orderId);
+
+    $order->delete();
+
+    return redirect()->route('orders.index')->with('success', 'Order "' . $order->id . '" deleted successfully.');
+}
+
+// 批量订单删除
+public function deleteSelectedOrders(Request $request)
+{
+    $orderIds = $request->input('order_ids');
+
+    $deletedCount = MyOrder::whereIn('id', $orderIds)->delete();
+
+    session()->flash('success', "$deletedCount orders deleted successfully.");
+
+    return response()->json(['success' => true]);
+
+
+}
 
 
 

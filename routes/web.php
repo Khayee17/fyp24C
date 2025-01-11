@@ -128,8 +128,6 @@ Route::post('/products/{id}/update-stock', [ProductController::class, 'updateSto
 // 删除产品
 Route::delete('/products/{id}', [ProductController::class, 'deleteProduct'])->name('productsDelete');
 
-// 显示产品菜单
-// Route::get('/order', [ProductController::class, 'showProductMenu'])->name('productMenu');
 Route::post('/products/delete-multiple', [ProductController::class, 'deleteMultiple']);
 
 Route::post('/products/search', [ProductController::class, 'search'])->name('products.search');
@@ -160,19 +158,15 @@ Route::get('/tables', [TableController::class, 'index'])->name('tables.index'); 
 Route::post('/tables', [TableController::class, 'store'])->name('tables.store'); // 创建桌位
 Route::put('/tables/{table}', [TableController::class, 'update'])->name('tables.update'); // 更新桌位
 Route::delete('/tables/{table}', [TableController::class, 'destroy'])->name('tables.destroy'); // 删除桌位
-// routes/web.php
-
-
-
-//show order detail clicking view button
-// Route::get('/order/{id}', [myOrderController::class, 'show'])->name('order.show');
 
 Route::get('/order/details/{orderId}', [myOrderController::class, 'show'])->name('order.details');
 
-// Route::get('/order/details/{id}', function ($id) {
-//     $order = \App\Models\Order::with('items')->findOrFail($id); // 假设订单模型是 Order
-//     return view('myOrderDetails', ['order' => $order]);
-// });
 
+//order management
+Route::get('/orderlist', [myOrderController::class, 'index'])->name('orders.index');
 
+Route::delete('/orders/{orderId}', [myOrderController::class, 'deleteOrder'])->name('ordersDelete');
 
+Route::post('/orders/delete-multiple', [myOrderController::class, 'deleteSelectedOrders'])->name('orders.deleteSelected');
+
+Route::post('/orders/search', [myOrderController::class, 'search'])->name('orders.search');

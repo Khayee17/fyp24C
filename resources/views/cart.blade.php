@@ -133,6 +133,7 @@
                 const variantText = item.variants && item.variants.length > 0 
                     ? item.variants.join(', ') // 用逗号分隔多个变体
                     : 'No variant selected'; // 如果没有变体，显示 'No variant selected'
+                const remarkHTML = item.remark ? `<p class="item-remark">Remark: ${item.remark}</p>` : '';
 
                 const cartItemHTML = `
                     <div class="cart-item">
@@ -141,6 +142,7 @@
                         <div class="item-details">
                             <h5>${item.name}</h5>
                             <p class="item-remark">${variantText}</p> 
+                             ${remarkHTML} 
                             <div class="item-price">RM ${(item.unitPrice + item.variantPrice).toFixed(2)}</div>
                         </div>
                         <div class="quantity-controls">
@@ -151,6 +153,10 @@
                     </div>
                 `;
                 cartItemsContainer.append(cartItemHTML);
+
+                if (item.remark) {
+                    localStorage.setItem('itemRemark_' + productId, item.remark);
+                }
             }
 
             updateCartSummary();
@@ -187,8 +193,8 @@
             const productName = $('#modal-product-title').text();
             const basePrice = parseFloat($('#modal-product-price').text().replace('RM ', ''));
             const quantity = parseInt($('#quantity').text());
-            const remark = $('#product-remark-input').val(); // 获取备注
-
+            const remarkContent = $('#remark-text').val();
+            
             let variantPrice = 0;
             let selectedVariants = [];
 
@@ -219,7 +225,7 @@
                         unitPrice: basePrice, 
                         variantPrice: 0, 
                         variants: selectedVariants, // 存储变体名称
-                        remark: remark 
+                        remark: remarkContent 
                     };
                 }
 
@@ -360,6 +366,8 @@
         });
 
         // Render the order items and summary
+        const remarkContent = $('#remark-text').val();
+
         const orderItemsContainer = $('.my-order-items');
         orderItemsContainer.empty();
 
@@ -375,6 +383,7 @@
                     <div class="item-details">
                         <p>${item.name}</p>
                         <p class="item-note">${variantText}</p>
+                        ${item.remark ? `<p class="item-remark">${item.remark}</p>` : ''}
                         <p class="item-price">
                             RM ${(item.unitPrice || 0) + (item.variantPrice || 0)} 
                             <span class="item-quantity">x ${item.quantity}</span>
